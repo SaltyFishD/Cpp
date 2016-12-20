@@ -2,6 +2,7 @@
 #include <ConsumerImplHelper/ToFCamera.h>
 #include "HalconCpp.h"
 #include "HDevThread.h"
+#include "CoordinateConvert.h"
 
 using namespace GenTLConsumerImplHelper;
 using namespace HalconCpp;
@@ -67,7 +68,7 @@ private:
 
 	int findTimesCount = 0;
 
-	Coord3D lastABSWorldCoor;
+	CToFCamera::Coord3D lastABSWorldCoor;
 
 	vector<CToFCamera::Coord3D> regionTrack;
 };

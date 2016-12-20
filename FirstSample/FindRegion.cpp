@@ -120,7 +120,7 @@ HObject FindRegion::findNext(HObject &Image)
 	}
 }
 
-HObject findRegion::findNext(HObject &Image, cameraParam _cameraParam)
+HObject FindRegion::findNext(HObject &Image, cameraParam _cameraParam)
 {
 	//xv = vx.D(), yv = vy.D(), zv = vz.D();
 	//lx = lastColumn.D(), ly = lastRow.D(), la = lastArea.D(), lg = lastGrayval.D();
@@ -129,7 +129,7 @@ HObject findRegion::findNext(HObject &Image, cameraParam _cameraParam)
 	HTuple Number;
 	GenEmptyRegion(&EmptyRegion);
 
-	Coord3D whereThisFunctionWillFind;
+	CToFCamera::Coord3D whereThisFunctionWillFind;
 	whereThisFunctionWillFind.x = lastABSWorldCoor.x + vx * (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 	whereThisFunctionWillFind.y = lastABSWorldCoor.y + vy * (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 	whereThisFunctionWillFind.z = lastABSWorldCoor.z + vz * (MAXFINDAGAINTIMES + 1 - findAgainTimes);
@@ -184,7 +184,7 @@ HObject findRegion::findNext(HObject &Image, cameraParam _cameraParam)
 		{
 			HTuple A, R, C;
 			AreaCenter(Region, &A, &R, &C);
-			findR(Image, &Region, R, C, 1500);
+			findRegion(Image, &Region, R, C, 1500);
 			AreaCenter(Region, &A, &R, &C);
 			if (A.D() < lastArea.D() * 0.4 || A.D() > lastArea.D() * 1.6)
 			{
@@ -206,7 +206,7 @@ HObject findRegion::findNext(HObject &Image, cameraParam _cameraParam)
 			AreaCenter(Result, &Area, &Row, &Column);
 			HalconCpp::Intensity(Result, Image, &Grayval, &Deviation);
 
-			Coord3D curABSWorldCoor = reverseWorldCoorToCameraCoor(_cameraParam, reverseCameraCoorToPixelCoor(Row.D(), Column.D(), Grayval));
+			CToFCamera::Coord3D curABSWorldCoor = CameraCoorToWorldCoor(_cameraParam, PixelCoorToCameraCoor(Row.D(), Column.D(), Grayval));
 			vx = (curABSWorldCoor.x - lastABSWorldCoor.x) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 			vy = (curABSWorldCoor.y - lastABSWorldCoor.y) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 			vz = (curABSWorldCoor.z - lastABSWorldCoor.z) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
