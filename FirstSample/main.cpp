@@ -6,22 +6,7 @@
 #include "MySerial.h"
 #include "CoordinateConvert.h"
 
-// 宏定义
-//#define USESERIALPORT
-
-using namespace HalconCpp;
-
-//全局变量
-HTuple hv_WindowHandle;
-HObject depthImage, confidenceImage;
-const void *depthData;
-const void *intensityData;
-const void *confidenceData;
-CToFCamera::Coord3D farPillarCoordinate;
-MySerial port;
-/*陀螺仪角度*/
-extern double Angle[3];
-
+//摄像头宏定义
 #if defined (_MSC_VER) && defined (_WIN32)
 // You have to delay load the GenApi libraries used for configuring the camera device.
 // Refer to the project settings to see how to instruct the linker to delay load DLLs. 
@@ -31,8 +16,24 @@ extern double Angle[3];
 #  pragma message( "    /DELAYLOAD:\"" DLL_NAME("GenApi") "\"")
 #endif
 
+// 宏定义
+//#define USESERIALPORT
+
+//命名空间
+using namespace HalconCpp;
 using namespace GenTLConsumerImplHelper;
 using namespace std;
+
+//全局变量
+HTuple hv_WindowHandle;
+HObject depthImage, confidenceImage;
+const void *depthData;//深度图像数据
+const void *intensityData;
+const void *confidenceData;
+CToFCamera::Coord3D farPillarCoordinate;
+MySerial port;//串口类
+extern double Angle[3];//陀螺仪角度
+
 
 double getFrameRate()
 {
@@ -53,7 +54,7 @@ double getFrameRate()
 	}
 }
 
-class Sample
+class CameraAction
 {
 public:
     int run();
@@ -65,7 +66,7 @@ private:
     int         m_nBuffersGrabbed;
 };
 
-void Sample::imageConfig(void)
+void CameraAction::imageConfig(void)
 {
 	// Enable 3D (point cloud) data, intensity data, and confidence data 
 	GenApi::CEnumerationPtr ptrComponentSelector = m_Camera.GetParameter("ComponentSelector");
@@ -75,7 +76,7 @@ void Sample::imageConfig(void)
 	// Enable range data
 	ptrComponentSelector->FromString("Range");
 	ptrComponentEnable->SetValue(true);
-	// Range information can be sent either as a 16-bit grey value image or as 3D coordinates (point cloud). For this sample, we want to acquire 3D coordinates.
+	// Range information can be sent either as a 16-bit grey value image or as 3D coordinates (point cloud). For this CameraAction, we want to acquire 3D coordinates.
 	// Note: To change the format of an image component, the Component Selector must first be set to the component
 	// you want to configure (see above).
 	// To use 16-bit integer depth information, choose "Mono16" instead of "Coord3D_ABC32f".
@@ -137,7 +138,7 @@ void Sample::imageConfig(void)
 	//std::cout << "Value of AcquisitionFrameRate is " << ptrAcquisitionFrameRate->GetValue() << std::endl;
 }
 
-int Sample::run()
+int CameraAction::run()
 {
     m_nBuffersGrabbed = 0;
 
@@ -154,7 +155,7 @@ int Sample::run()
 #endif
         // Acquire images until the call-back onImageGrabbed indicates to stop acquisition. 
         // 5 buffers are used (round-robin).
-        m_Camera.GrabContinuous( 5, 1000, this, &Sample::onImageGrabbed );
+        m_Camera.GrabContinuous( 5, 1000, this, &CameraAction::onImageGrabbed );
 
         // Clean-up
         m_Camera.Close();
@@ -175,7 +176,7 @@ int Sample::run()
 
 FindRegionList taskList;
 PillarState myPillarState;
-bool Sample::onImageGrabbed( GrabResult grabResult, BufferParts parts )
+bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 {
 	bool hv_run;
 
@@ -420,7 +421,7 @@ int main(int argc, char* argv[])
 
         CToFCamera::InitProducer();
 
-        Sample processing;
+        CameraAction processing;
 
         exitCode = processing.run();
     }
