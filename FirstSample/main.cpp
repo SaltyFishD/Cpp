@@ -17,7 +17,7 @@
 #endif
 
 // 宏定义
-//#define USESERIALPORT
+#define USESERIALPORT
 
 //命名空间
 using namespace HalconCpp;
@@ -30,7 +30,7 @@ HObject depthImage, confidenceImage;
 const void *depthData;//深度图像数据
 const void *intensityData;
 const void *confidenceData;
-CToFCamera::Coord3D farPillarCoordinate;
+myCoor3D farPillarCoordinate;
 MySerial port;//串口类
 extern double Angle[3];//陀螺仪角度
 
@@ -160,11 +160,6 @@ int CameraAction::run()
         // Clean-up
         m_Camera.Close();
 
-		//关闭串口
-#ifdef USESERIALPORT
-		port.~MySerial();
-#endif
-
     }
     catch ( const GenICam::GenericException& e )
     {
@@ -215,10 +210,10 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 			//byte *depthImageByte = new byte[width*height];
 			for (int i = 0; i < width*height; i++)
 			{
-				if (((uint16_t*)confidenceData)[i] < 4000 && (((CToFCamera::Coord3D*) depthData + i)->z) < 4000)
+				if (((uint16_t*)confidenceData)[i] < 4000 && (((myCoor3D*) depthData + i)->z) < 4000)
 					depthImageByte[i] = 0;
 				else           
-					depthImageByte[i] = (((CToFCamera::Coord3D*) depthData + i)->z) /** 256 / 14000*/;
+					depthImageByte[i] = (((myCoor3D*) depthData + i)->z) /** 256 / 14000*/;
 			}
 			//GenImage1(&depthImage, "real", width, height, (Hlong)(depthImageByte));
 			GenImage1(&depthImage, "uint2", width, height, (Hlong)(depthImageByte));
@@ -262,8 +257,8 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 			//		disp_message(hv_WindowHandle, "远", "window", farPillarRow, farPillarColumn - 15, "black", "true");
 
 
-			//		CToFCamera::Coord3D *pFarPillarCoordinate;
-			//		pFarPillarCoordinate = (CToFCamera::Coord3D*) depthData + farPillarRow * width + (int)farPillarColumn;
+			//		myCoor3D *pFarPillarCoordinate;
+			//		pFarPillarCoordinate = (myCoor3D*) depthData + farPillarRow * width + (int)farPillarColumn;
 			//		farPillarCoordinate = middleFilter(*pFarPillarCoordinate);
 			//		cout << farPillarCoordinate.y << endl;
 			//		
@@ -276,19 +271,19 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 			//	first = false;
 			//}
 			/***********************现代的方法****************************************/
-			//myPillarState.updateCameraData(depthImage, depthData, confidenceData);
-			//cameraParam tmpParam;
-			//tmpParam.worldX = 5520;
-			//tmpParam.worldY = 1750;
-			//tmpParam.worldZ = 790;
-			//tmpParam.pitch = -Angle[1] + 2;
-			//tmpParam.yaw = Angle[2] + 7.5;
+			myPillarState.updateCameraData(depthImage, depthData, confidenceData);
+			cameraParam tmpParam;
+			tmpParam.worldX = 5740;
+			tmpParam.worldY = 1160;
+			tmpParam.worldZ = 520;
+			tmpParam.pitch = -Angle[1] + 6;
+			tmpParam.yaw = Angle[2] - 20;
 
-			//CToFCamera::Coord3D pillarPixelCoor;
-			//CToFCamera::Coord3D tmp;
-			////现在返回的是像素坐标
-			//pillarPixelCoor = myPillarState.getPillarCoor(tmpParam, myPillarState.mostLeftPillar);
-			//tmp = *((CToFCamera::Coord3D*) depthData + (int)pillarPixelCoor.x * width + (int)pillarPixelCoor.y);
+			myCoor3D pillarPixelCoor;
+			myCoor3D tmp;
+			//现在返回的是像素坐标
+			pillarPixelCoor = myPillarState.getPillarCoor(tmpParam, myPillarState.middlePillar);
+			tmp = *((myCoor3D*) depthData + (int)pillarPixelCoor.x * width + (int)pillarPixelCoor.y);
 			/********************************************************/
 
 			/***************************飞盘追踪*********************/
@@ -335,10 +330,10 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 			//			DispObj(regionsFound[i], HDevWindowStack::GetActive());
 			//		AreaCenter(regionsFound[i], &hv_SaucerArea, &hv_SaucerRow, &hv_SaucerColumn);
 
-			//		CToFCamera::Coord3D *pSaucerCoorTwo[2];
-			//		pSaucerCoorTwo[0] = (CToFCamera::Coord3D*) depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() - 1;
-			//		pSaucerCoorTwo[1] = (CToFCamera::Coord3D*) depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() + 1;
-			//		CToFCamera::Coord3D* pSaucerCoordinate = new CToFCamera::Coord3D();
+			//		myCoor3D *pSaucerCoorTwo[2];
+			//		pSaucerCoorTwo[0] = (myCoor3D*) depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() - 1;
+			//		pSaucerCoorTwo[1] = (myCoor3D*) depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() + 1;
+			//		myCoor3D* pSaucerCoordinate = new myCoor3D();
 			//		pSaucerCoordinate->x = (pSaucerCoorTwo[0]->x + pSaucerCoorTwo[1]->x) / 2;
 			//		pSaucerCoordinate->y = (pSaucerCoorTwo[0]->y + pSaucerCoorTwo[1]->y) / 2;
 			//		pSaucerCoordinate->z = (pSaucerCoorTwo[0]->z + pSaucerCoorTwo[1]->z) / 2;
@@ -366,13 +361,8 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 			{
 				GetMposition(3600, &hv_Row, &hv_Column, &hv_Button);
 				GetGrayval(depthImage, hv_Row, hv_Column, &hv_Grayval);
-				CToFCamera::Coord3D *p3DCoordinate = (CToFCamera::Coord3D*) depthData + (int)hv_Row.D() * width + (int)hv_Column.D();
-				cout << "----------------------------------------------------------" << endl;
-				//cout << "x: " << setw(2) << p3DCoordinate->x << " y: " << setw(2) << p3DCoordinate->y << " Z:  " << setw(2) << p3DCoordinate->z << endl;
-				
-				CToFCamera::Coord3D computeCoor = PixelCoorToCameraCoor(hv_Row.D(), hv_Column.D(), hv_Grayval.D());
-				cout << "After compute:" << endl;
-				cout << "x: " << setw(2) << p3DCoordinate->x-computeCoor.x << " y: " << setw(2) << p3DCoordinate->y-computeCoor.y << " Z:  " << setw(2) << p3DCoordinate->z-computeCoor.z << endl;
+				myCoor3D *p3DCoordinate = (myCoor3D*) depthData + (int)hv_Row.D() * width + (int)hv_Column.D();
+
 				if (0 != (hv_Button == 2))
 				{
 					hv_run = 0;

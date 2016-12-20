@@ -302,16 +302,16 @@ void disp_message(HTuple hv_WindowHandle, HTuple hv_String, HTuple hv_CoordSyste
 	return;
 }
 
-CToFCamera::Coord3D slideFilter(CToFCamera::Coord3D pillarCoor)
+myCoor3D slideFilter(myCoor3D pillarCoor)
 {
 	static const int filterSize = 30;
-	static CToFCamera::Coord3D sFCoor[filterSize];
+	static myCoor3D sFCoor[filterSize];
 	static bool withTenData = true;
 	static int dataCount = 0;
 	static float sumX = 0;
 	static float sumY = 0;
 	static float sumZ = 0;
-	CToFCamera::Coord3D resultCoor;
+	myCoor3D resultCoor;
 	if (pillarCoor.IsValid())
 	{
 		if (dataCount > filterSize - 1)
@@ -350,14 +350,14 @@ CToFCamera::Coord3D slideFilter(CToFCamera::Coord3D pillarCoor)
 	return resultCoor;
 }
 
-CToFCamera::Coord3D middleFilter(CToFCamera::Coord3D pillarCoor)
+myCoor3D middleFilter(myCoor3D pillarCoor)
 {
 	static const int FILTERSIZE = 30;
-	static CToFCamera::Coord3D sFCoor[FILTERSIZE];
-	CToFCamera::Coord3D sortedCoor[FILTERSIZE];
+	static myCoor3D sFCoor[FILTERSIZE];
+	myCoor3D sortedCoor[FILTERSIZE];
 	static int dataCount = 0;
 	static bool withTenData = true;
-	CToFCamera::Coord3D resultCoor;
+	myCoor3D resultCoor;
 
 	if (dataCount > FILTERSIZE - 1)
 	{
@@ -378,7 +378,7 @@ CToFCamera::Coord3D middleFilter(CToFCamera::Coord3D pillarCoor)
 			{
 				if (sortedCoor[k].y < sortedCoor[j].y)
 				{
-					CToFCamera::Coord3D tmp = sortedCoor[k];
+					myCoor3D tmp = sortedCoor[k];
 					sortedCoor[k] = sortedCoor[j];
 					sortedCoor[j] = tmp;
 				}
@@ -400,7 +400,7 @@ CToFCamera::Coord3D middleFilter(CToFCamera::Coord3D pillarCoor)
 			{
 				if (sortedCoor[k].y < sortedCoor[j].y)
 				{
-					CToFCamera::Coord3D tmp = sortedCoor[k];
+					myCoor3D tmp = sortedCoor[k];
 					sortedCoor[k] = sortedCoor[j];
 					sortedCoor[j] = tmp;
 				}

@@ -1,7 +1,7 @@
 #include "FindRegion.h"
 #include "MyHalconFunctions.h"
 
-extern CToFCamera::Coord3D farPillarCoordinate;
+extern myCoor3D farPillarCoordinate;
 
 int FindRegion::saucerCount = 1;
 
@@ -129,7 +129,7 @@ HObject FindRegion::findNext(HObject &Image, cameraParam _cameraParam)
 	HTuple Number;
 	GenEmptyRegion(&EmptyRegion);
 
-	CToFCamera::Coord3D whereThisFunctionWillFind;
+	myCoor3D whereThisFunctionWillFind;
 	whereThisFunctionWillFind.x = lastABSWorldCoor.x + vx * (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 	whereThisFunctionWillFind.y = lastABSWorldCoor.y + vy * (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 	whereThisFunctionWillFind.z = lastABSWorldCoor.z + vz * (MAXFINDAGAINTIMES + 1 - findAgainTimes);
@@ -206,7 +206,7 @@ HObject FindRegion::findNext(HObject &Image, cameraParam _cameraParam)
 			AreaCenter(Result, &Area, &Row, &Column);
 			HalconCpp::Intensity(Result, Image, &Grayval, &Deviation);
 
-			CToFCamera::Coord3D curABSWorldCoor = CameraCoorToWorldCoor(_cameraParam, PixelCoorToCameraCoor(Row.D(), Column.D(), Grayval));
+			myCoor3D curABSWorldCoor = CameraCoorToWorldCoor(_cameraParam, PixelCoorToCameraCoor(Row.D(), Column.D(), Grayval));
 			vx = (curABSWorldCoor.x - lastABSWorldCoor.x) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 			vy = (curABSWorldCoor.y - lastABSWorldCoor.y) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 			vz = (curABSWorldCoor.z - lastABSWorldCoor.z) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
@@ -224,7 +224,7 @@ HObject FindRegion::findNext(HObject &Image, cameraParam _cameraParam)
 }
 
 
-int FindRegion::getOffset(CToFCamera::Coord3D pillarCoor, float offset[2])
+int FindRegion::getOffset(myCoor3D pillarCoor, float offset[2])
 {
 	static const int HEIGHTOFFSET = 300;
 	static const int HEIGHTFILTRE = 200;
@@ -250,7 +250,7 @@ int FindRegion::getOffset(CToFCamera::Coord3D pillarCoor, float offset[2])
 
 
 	//½»µã×ø±ê
-	CToFCamera::Coord3D intersectionCoor;
+	myCoor3D intersectionCoor;
 	float ratioThree[3];
 	ratioThree[0] = (regionTrack[lastCoorIndex - 1].y - regionTrack[lastCoorIndex].y) /
 		(regionTrack[lastCoorIndex].y - (pillarCoor.y - HEIGHTOFFSET));

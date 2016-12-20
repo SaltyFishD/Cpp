@@ -43,12 +43,12 @@ public:
 
 	HObject findNext(HObject &Image, cameraParam _cameraParam);
 
-	void recordRegionTrack(CToFCamera::Coord3D regionCoor)
+	void recordRegionTrack(myCoor3D regionCoor)
 	{
 		regionTrack.push_back(regionCoor);
 	}
 
-	int getOffset(CToFCamera::Coord3D pillarCoor, float offset[2]);
+	int getOffset(myCoor3D pillarCoor, float offset[2]);
 private:
 	HTuple lastRow, lastColumn, lastArea, lastGrayval = 0, vx = 0, vy = 0, vz = 0;
 
@@ -68,9 +68,9 @@ private:
 
 	int findTimesCount = 0;
 
-	CToFCamera::Coord3D lastABSWorldCoor;
+	myCoor3D lastABSWorldCoor;
 
-	vector<CToFCamera::Coord3D> regionTrack;
+	vector<myCoor3D> regionTrack;
 };
 
 class FindRegionList
