@@ -40,6 +40,8 @@ public:
 
 	HObject findNext(HObject &Image);
 
+	HObject findNext(HObject &Image, cameraParam _cameraParam);
+
 	void recordRegionTrack(CToFCamera::Coord3D regionCoor)
 	{
 		regionTrack.push_back(regionCoor);
@@ -64,6 +66,8 @@ private:
 	bool hasLost = false;
 
 	int findTimesCount = 0;
+
+	Coord3D lastABSWorldCoor;
 
 	vector<CToFCamera::Coord3D> regionTrack;
 };
