@@ -1,7 +1,7 @@
 #include "CoordinateConvert.h"
-#define M_PI 3.14159265358979323846
 #define REDTEAM
 
+const double M_PI = 3.14159265358979323846;
 
 bool CameraCoorToPixelCoor(CToFCamera::Coord3D CameraCoor, float* Row, float* Column)
 {
@@ -10,7 +10,8 @@ bool CameraCoorToPixelCoor(CToFCamera::Coord3D CameraCoor, float* Row, float* Co
 	thetaColumn = atan(CameraCoor.x / CameraCoor.z) / M_PI * 180;
 	*Row = thetaRow * height / vFov + height / 2;
 	*Column = thetaColumn * width / hFov + width / 2;
-	//坐标不在屏幕内
+
+	//判断坐标是不是在屏幕内
 	if (*Row < 0 || *Row>height || *Column<0 || *Column>width)
 		return false;
 	return true;
@@ -27,9 +28,6 @@ CToFCamera::Coord3D WorldCoorToCameraCoor(cameraParam _cameraParam, CToFCamera::
 		return CameraCoor;
 	}
 	//相对坐标
-	//relativeCoor.x = WorldCoor.x - _cameraParam.worldX;
-	//relativeCoor.y = WorldCoor.y - _cameraParam.worldY;
-	//relativeCoor.z = WorldCoor.z - _cameraParam.worldZ;
 #ifdef REDTEAM
 	relativeCoor.x = _cameraParam.worldX - WorldCoor.x;
 #endif
