@@ -1,9 +1,8 @@
 #pragma once
 
 #include <ConsumerImplHelper/ToFCamera.h>
+//so ugly
 
-
-//this is a test
 const int height = 480, width = 640;
 const float hFov = 57, vFov = 42;
 
