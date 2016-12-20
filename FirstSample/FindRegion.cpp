@@ -120,6 +120,110 @@ HObject FindRegion::findNext(HObject &Image)
 	}
 }
 
+HObject findRegion::findNext(HObject &Image, cameraParam _cameraParam)
+{
+	//xv = vx.D(), yv = vy.D(), zv = vz.D();
+	//lx = lastColumn.D(), ly = lastRow.D(), la = lastArea.D(), lg = lastGrayval.D();
+	++findTimesCount;
+	HObject Rectangle, ImageReduced, Region, BackgroundRegions, EmptyRegion, SelectShapeRegion;
+	HTuple Number;
+	GenEmptyRegion(&EmptyRegion);
+
+	Coord3D whereThisFunctionWillFind;
+	whereThisFunctionWillFind.x = lastABSWorldCoor.x + vx * (MAXFINDAGAINTIMES + 1 - findAgainTimes);
+	whereThisFunctionWillFind.y = lastABSWorldCoor.y + vy * (MAXFINDAGAINTIMES + 1 - findAgainTimes);
+	whereThisFunctionWillFind.z = lastABSWorldCoor.z + vz * (MAXFINDAGAINTIMES + 1 - findAgainTimes);
+	float Row, Column;
+	if (!CameraCoorToPixelCoor(WorldCoorToCameraCoor(_cameraParam, whereThisFunctionWillFind), &Row, &Column))
+	{	//移动太多移出屏幕了
+		--findAgainTimes;
+		return EmptyRegion;
+	}
+
+	if (findAgainTimes == 0)
+	{
+		hasLost = true;
+		return EmptyRegion;
+		;//删除这个类
+	}
+	if (findTimesCount)
+	{
+		if (Row > 32755 || Row < -32755 || Column > 32748 || Column < -32748 ||
+			whereThisFunctionWillFind.z < 1000)
+		{
+			hasLost = true;
+			return EmptyRegion;
+			//飞出屏幕外，干掉这个类
+		}
+
+		GenRectangle2(&Rectangle, Row, Column, 0, 190000.0 / whereThisFunctionWillFind.z, 120000.0 / whereThisFunctionWillFind.z);
+		if (lastArea.D() < 350)
+			GenRectangle2(&Rectangle, Row, Column, 0, 330 / 9, 330 / 11);
+		if (lastArea.D() < 50)
+			GenRectangle2(&Rectangle, Row, Column, 0, 240 / 9, 240 / 13);
+		ReduceDomain(Image, Rectangle, &ImageReduced);
+		if (whereThisFunctionWillFind.z - threahold > 65535 || whereThisFunctionWillFind.z + threahold < 0)
+		{
+			hasLost = true;
+			return EmptyRegion;
+			//飞出屏幕外，干掉这个类
+		}
+
+		Threshold(ImageReduced, &Region, whereThisFunctionWillFind.z - threahold, whereThisFunctionWillFind.z + threahold);
+		Connection(Region, &BackgroundRegions);
+		SelectShape(BackgroundRegions, &SelectShapeRegion, "area", "and", 233.180000 / (whereThisFunctionWillFind.z / 1000 * (whereThisFunctionWillFind.z / 1000)), 15177.840000 / (whereThisFunctionWillFind.z / 1000 * (whereThisFunctionWillFind.z / 1000)));
+		//SelectShape(SelectShapeRegion, &SelectShapeRegion, "row", "and", 0, 450);
+		SelectShape(BackgroundRegions, &SelectShapeRegion, "row", "and", Row - 20, Row + 20);
+
+
+		Union1(SelectShapeRegion, &Region);
+		CountObj(Region, &Number);
+
+
+		if (!(Number == 0))
+		{
+			HTuple A, R, C;
+			AreaCenter(Region, &A, &R, &C);
+			findR(Image, &Region, R, C, 1500);
+			AreaCenter(Region, &A, &R, &C);
+			if (A.D() < lastArea.D() * 0.4 || A.D() > lastArea.D() * 1.6)
+			{
+				Number = 0;
+			}
+		}
+
+		if (Number == 0)
+		{
+			--findAgainTimes;
+			return EmptyRegion;
+		}
+
+		else//更新数据
+		{
+
+			Result = Region;
+			HTuple Area, Row, Column, Grayval, Deviation;
+			AreaCenter(Result, &Area, &Row, &Column);
+			HalconCpp::Intensity(Result, Image, &Grayval, &Deviation);
+
+			Coord3D curABSWorldCoor = reverseWorldCoorToCameraCoor(_cameraParam, reverseCameraCoorToPixelCoor(Row.D(), Column.D(), Grayval));
+			vx = (curABSWorldCoor.x - lastABSWorldCoor.x) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
+			vy = (curABSWorldCoor.y - lastABSWorldCoor.y) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
+			vz = (curABSWorldCoor.z - lastABSWorldCoor.z) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
+			lastArea = Area * 0.65 + lastArea * lastABSWorldCoor.z * lastABSWorldCoor.z / curABSWorldCoor.z / curABSWorldCoor.z * 0.35;
+
+			lastABSWorldCoor = curABSWorldCoor;
+			//lastColumn = Column;
+			//lastRow = Row;
+			//lastGrayval = Grayval;
+			findAgainTimes = MAXFINDAGAINTIMES;
+			return Result;
+
+		}
+	}
+}
+
+
 int FindRegion::getOffset(CToFCamera::Coord3D pillarCoor, float offset[2])
 {
 	static const int HEIGHTOFFSET = 300;
