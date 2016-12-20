@@ -160,6 +160,7 @@ int CameraAction::run()
         // Clean-up
         m_Camera.Close();
 
+		//¹Ø±Õ´®¿Ú
 #ifdef USESERIALPORT
 		port.~MySerial();
 #endif
