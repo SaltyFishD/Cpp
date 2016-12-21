@@ -70,17 +70,19 @@ myCoor3D PillarState::middleFilter(myCoor3D pillarCoor)
 myCoor3D PillarState::getPillarCoor(const cameraParam myCamParam, const PillarIndex pillarToFind)
 {
 	myCoor3D calculateCoor = WorldCoorToCameraCoor(myCamParam, pillarWorldCoor[pillarToFind]);
-	cout << calculateCoor.x << " " << calculateCoor.y << " " << calculateCoor.z << endl;
+	//显示计算的坐标值
+	//cout << calculateCoor.x << " " << calculateCoor.y << " " << calculateCoor.z << endl;
 
 	float pillarRow, pillarColumn;
 	bool notBeyond = CameraCoorToPixelCoor(calculateCoor, &pillarRow, &pillarColumn);
-	//pillarColumn = width - pillarColumn;
 	SetColor(hv_WindowHandle, "red");
 	HObject RectSB;
 	GenRectangle2(&RectSB, pillarRow, pillarColumn, 0, 4, 4);
 	if (HDevWindowStack::IsOpen())
 		DispObj(RectSB, HDevWindowStack::GetActive());
-	cout << pillarRow << "    " << pillarColumn << endl;
+
+	//显示计算的像素坐标值
+	//cout << pillarRow << "    " << pillarColumn << endl;
 
 	if (pillarColumn - 25 < 0 && pillarColumn + 25 > 480) 
 		notBeyond = false;
@@ -99,6 +101,8 @@ myCoor3D PillarState::getPillarCoor(const cameraParam myCamParam, const PillarIn
 		ReduceDomain(depthImage, pillarRect, &pillarImage);
 		HObject pillarRegion;
 		Threshold(pillarImage, &pillarRegion, (HTuple)(calculateCoor.z - 800), (HTuple)(calculateCoor.z + 800));
+		//if (HDevWindowStack::IsOpen())
+		//		DispObj(pillarRegion, HDevWindowStack::GetActive());
 		HObject ho_ConnectedRegions;
 		Connection(pillarRegion, &ho_ConnectedRegions);
 
@@ -115,18 +119,18 @@ myCoor3D PillarState::getPillarCoor(const cameraParam myCamParam, const PillarIn
 		}
 
 		HObject ho_SelectedRegions;
-		SelectShapeStd(ho_ConnectedRegions, &ho_SelectedRegions, "max_area", 90);
+		SelectShapeStd(ho_ConnectedRegions, &ho_SelectedRegions, "max_area", 70);
 		HTuple a,r,c;
-		AreaCenter(ho_ConnectedRegions, &a, &r, &c);
+		AreaCenter(ho_SelectedRegions, &a, &r, &c);
 		HObject plRegion;
 		/*****************待修改**********/
 		SetColor(hv_WindowHandle, "green");
-		findRegion(depthImage, &plRegion, r, c, 500);
+		findRegion(depthImage, &plRegion, r, c, 800);
 		if (HDevWindowStack::IsOpen())
 				DispObj(plRegion, HDevWindowStack::GetActive());
 		/*****************************************************************/
 		HTuple  hv_Value;
-		RegionFeatures(ho_ConnectedRegions, ((HTuple("row1").Append("column1")).Append("column2")),
+		RegionFeatures(ho_SelectedRegions, ((HTuple("row1").Append("column1")).Append("column2")),
 			&hv_Value);
 		
 		int pillarPixelColumn = (hv_Value[1].D() + hv_Value[2].D()) / 2;

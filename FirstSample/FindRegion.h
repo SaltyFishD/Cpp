@@ -11,20 +11,23 @@ using namespace std;
 class FindRegion
 {
 public:
-	/*飞盘编号*/
-	const int saucerIndex;
-
-	~FindRegion() {};
-
-	bool thisHasLost()
-	{
-		return hasLost;
-	}
-
 	FindRegion(HTuple Row, HTuple Column, HTuple Area, HTuple Grayval) :
 		lastRow(Row), lastColumn(Column), lastArea(Area), lastGrayval(Grayval), saucerIndex(saucerCount)
 	{
 		saucerCount++;
+	}
+
+	FindRegion(HTuple Row, HTuple Column, HTuple Area, HTuple Grayval, cameraParam _cameraParam) :lastABSWorldCoor(CameraCoorToWorldCoor(_cameraParam, PixelCoorToCameraCoor(Row.D(), Column.D(), Grayval.D()))), lastArea(Area), saucerIndex(saucerCount)
+	{
+		saucerCount++;
+	}
+
+	/*飞盘编号*/
+	const int saucerIndex;
+
+	bool thisHasLost()
+	{
+		return hasLost;
 	}
 
 	friend bool operator == (FindRegion& lhs, FindRegion& rhs)
@@ -49,6 +52,8 @@ public:
 	}
 
 	int getOffset(myCoor3D pillarCoor, float offset[2]);
+
+	~FindRegion() {};
 private:
 	HTuple lastRow, lastColumn, lastArea, lastGrayval = 0, vx = 0, vy = 0, vz = 0;
 
@@ -78,11 +83,13 @@ class FindRegionList
 private:
 	//设置检测区的宽度
 	const int DETECTMINLIMIT = 100;
-	const int DETECTMAXLIMIT = 3000;
+	const int DETECTMAXLIMIT = 2500;
 	size_t regionNum;
 
 	//将region加入查找队列
 	void pushRegionToFind(HTuple Row, HTuple Column, HTuple Area, HTuple Grayval);
+	//加入世界坐标的版本
+	void pushRegionToFind(HTuple Row, HTuple Column, HTuple Area, HTuple Grayval, cameraParam mycamParam);
 public:
 	FindRegionList() {};
 
