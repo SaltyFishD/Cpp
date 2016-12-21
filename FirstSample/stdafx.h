@@ -18,4 +18,4 @@
 // ∫Í∂®“Â
 #define USESERIALPORT
 #define BLUETEAM
-#define NEWMETHOD
+//#define NEWMETHOD

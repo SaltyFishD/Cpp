@@ -246,13 +246,13 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 			myCamParam.worldY = 1160;
 			myCamParam.worldZ = 520;
 			myCamParam.pitch = -Angle[1] + 3;
-			myCamParam.yaw = Angle[2] - 16;
+			myCamParam.yaw = Angle[2] - 19;
 
 			myCoor3D pillarPixelCoor;
 
 			//现在返回的是像素坐标
-			pillarPixelCoor = myPillarState.getPillarCoor(myCamParam, myPillarState.nearPillar);
-			pillarCamCoor = *((myCoor3D*) depthData + (int)pillarPixelCoor.x * width + (int)pillarPixelCoor.y);
+			pillarPixelCoor = myPillarState.getPillarCoor(myCamParam, myPillarState.middlePillar);
+			//pillarCamCoor = *((myCoor3D*) depthData + (int)pillarPixelCoor.x * width + (int)pillarPixelCoor.y);
 			/***************************飞盘追踪*********************/
 			
 				//检测有无飞盘飞过检测区
