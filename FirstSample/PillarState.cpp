@@ -1,17 +1,18 @@
+#include "stdafx.h"
 #include <cMath>
 #include "PillarState.h"
 
 #include "MyHalconFunctions.h"
 
 extern HTuple hv_WindowHandle;
-CToFCamera::Coord3D PillarState::middleFilter(CToFCamera::Coord3D pillarCoor)
+myCoor3D PillarState::middleFilter(myCoor3D pillarCoor)
 {
 	static const int FILTERSIZE = 30;
-	static CToFCamera::Coord3D sFCoor[FILTERSIZE];
-	CToFCamera::Coord3D sortedCoor[FILTERSIZE];
+	static myCoor3D sFCoor[FILTERSIZE];
+	myCoor3D sortedCoor[FILTERSIZE];
 	static int dataCount = 0;
 	static bool withTenData = true;
-	CToFCamera::Coord3D resultCoor;
+	myCoor3D resultCoor;
 
 	if (dataCount > FILTERSIZE - 1)
 	{
@@ -32,7 +33,7 @@ CToFCamera::Coord3D PillarState::middleFilter(CToFCamera::Coord3D pillarCoor)
 			{
 				if (sortedCoor[k].y < sortedCoor[j].y)
 				{
-					CToFCamera::Coord3D tmp = sortedCoor[k];
+					myCoor3D tmp = sortedCoor[k];
 					sortedCoor[k] = sortedCoor[j];
 					sortedCoor[j] = tmp;
 				}
@@ -54,7 +55,7 @@ CToFCamera::Coord3D PillarState::middleFilter(CToFCamera::Coord3D pillarCoor)
 			{
 				if (sortedCoor[k].y < sortedCoor[j].y)
 				{
-					CToFCamera::Coord3D tmp = sortedCoor[k];
+					myCoor3D tmp = sortedCoor[k];
 					sortedCoor[k] = sortedCoor[j];
 					sortedCoor[j] = tmp;
 				}
@@ -66,9 +67,11 @@ CToFCamera::Coord3D PillarState::middleFilter(CToFCamera::Coord3D pillarCoor)
 	return resultCoor;
 }
 
-CToFCamera::Coord3D PillarState::getPillarCoor(const cameraParam myCamParam, const PillarIndex pillarToFind)
+myCoor3D PillarState::getPillarCoor(const cameraParam myCamParam, const PillarIndex pillarToFind)
 {
-	CToFCamera::Coord3D calculateCoor = calculatePillarCoor(myCamParam, pillarToFind);
+	myCoor3D calculateCoor = WorldCoorToCameraCoor(myCamParam, pillarWorldCoor[pillarToFind]);
+	cout << calculateCoor.x << " " << calculateCoor.y << " " << calculateCoor.z << endl;
+
 	float pillarRow, pillarColumn;
 	bool notBeyond = CameraCoorToPixelCoor(calculateCoor, &pillarRow, &pillarColumn);
 	//pillarColumn = width - pillarColumn;
@@ -77,11 +80,11 @@ CToFCamera::Coord3D PillarState::getPillarCoor(const cameraParam myCamParam, con
 	GenRectangle2(&RectSB, pillarRow, pillarColumn, 0, 4, 4);
 	if (HDevWindowStack::IsOpen())
 		DispObj(RectSB, HDevWindowStack::GetActive());
-	//cout << pillarRow << "    " << pillarColumn << endl;
+	cout << pillarRow << "    " << pillarColumn << endl;
 
 	if (pillarColumn - 25 < 0 && pillarColumn + 25 > 480) 
 		notBeyond = false;
-	//cout << calculateCoor.x << " " << calculateCoor.y << " " << calculateCoor.z << endl;
+
 	if (notBeyond)
 	{
 		float rowStart, columnStart, rowEnd, columnEnd;
@@ -95,7 +98,7 @@ CToFCamera::Coord3D PillarState::getPillarCoor(const cameraParam myCamParam, con
 		HObject pillarImage;
 		ReduceDomain(depthImage, pillarRect, &pillarImage);
 		HObject pillarRegion;
-		Threshold(pillarImage, &pillarRegion, (HTuple)(calculateCoor.y - 500), (HTuple)(calculateCoor.y + 500));
+		Threshold(pillarImage, &pillarRegion, (HTuple)(calculateCoor.z - 800), (HTuple)(calculateCoor.z + 800));
 		HObject ho_ConnectedRegions;
 		Connection(pillarRegion, &ho_ConnectedRegions);
 
@@ -104,7 +107,7 @@ CToFCamera::Coord3D PillarState::getPillarCoor(const cameraParam myCamParam, con
 		if (hv_RegionNum.D() < 1)
 		{
 			disp_message(hv_WindowHandle, "没检测到柱子", "window", 240, 320, "black", "true");
-			CToFCamera::Coord3D falseCoor;
+			myCoor3D falseCoor;
 			falseCoor.x = -2;
 			falseCoor.y = -2;
 			falseCoor.y = -2;
@@ -131,7 +134,7 @@ CToFCamera::Coord3D PillarState::getPillarCoor(const cameraParam myCamParam, con
 
 		disp_message(hv_WindowHandle, "台", "window", PillarPixelRow - 15, pillarPixelColumn, "black", "true");
 
-		CToFCamera::Coord3D pillarCoor;
+		myCoor3D pillarCoor;
 		pillarCoor.x = PillarPixelRow;
 		pillarCoor.y = pillarPixelColumn;
 		pillarCoor.z = 0;
@@ -141,47 +144,10 @@ CToFCamera::Coord3D PillarState::getPillarCoor(const cameraParam myCamParam, con
 	{
 		disp_message(hv_WindowHandle, "柱子不在屏幕里", "window", 240, 320, "black", "true");
 
-		CToFCamera::Coord3D falseCoor;
+		myCoor3D falseCoor;
 		falseCoor.x = -1;
 		falseCoor.y = -1;
 		falseCoor.y = -1;
 		return falseCoor;
 	}
 }
-
-CToFCamera::Coord3D PillarState::calculatePillarCoor(const cameraParam& myCamParam, const PillarIndex pillarToFind)
-{
-	CToFCamera::Coord3D relativeCoor, CameraCoor;
-	if (!relativeCoor.IsValid())
-	{
-		CameraCoor.x = 0;
-		CameraCoor.y = 0;
-		CameraCoor.z = 0;
-		return CameraCoor;
-	}
-	//相对坐标
-	relativeCoor.x = pillarWorldCoor[pillarToFind][0] - myCamParam.worldX;
-
-#ifdef BLUETEAM
-	relativeCoor.x = -relativeCoor.x;
-#endif
-
-#ifdef REDTEAM
-	relativeCoor.x = relativeCoor.x;
-#endif
-
-	relativeCoor.y = pillarWorldCoor[pillarToFind][1] - myCamParam.worldY;
-	relativeCoor.z = pillarWorldCoor[pillarToFind][2] - myCamParam.worldZ;
-	//转换为相机坐标
-	CameraCoor.x = relativeCoor.x * cos(myCamParam.yaw / 180 * 3.14159) + relativeCoor.y * sin(myCamParam.yaw / 180 * 3.14159);
-
-	CameraCoor.y = relativeCoor.x * (-sin(myCamParam.yaw / 180 * 3.14159) * cos(myCamParam.pitch / 180 * 3.14159)) +
-		relativeCoor.y * (cos(myCamParam.yaw / 180 * 3.14159) * cos(myCamParam.pitch / 180 * 3.14159)) + relativeCoor.z * sin(myCamParam.pitch / 180 * 3.14159);
-	CameraCoor.z = relativeCoor.x * (sin(myCamParam.yaw / 180 * 3.14159) * sin(myCamParam.pitch / 180 * 3.14159)) +
-		relativeCoor.y * (-cos(myCamParam.yaw / 180 * 3.14159) * sin(myCamParam.pitch / 180 * 3.14159)) + relativeCoor.z * cos(myCamParam.pitch / 180 * 3.14159);
-	return CameraCoor;
-
-}
-
-
-

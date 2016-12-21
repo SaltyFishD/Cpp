@@ -1,7 +1,10 @@
+#include "stdafx.h"
 #include "FindRegion.h"
 #include "MyHalconFunctions.h"
 
-extern CToFCamera::Coord3D farPillarCoordinate;
+//外部变量
+extern myCoor3D farPillarCoordinate;
+extern HTuple hv_WindowHandle;
 
 int FindRegion::saucerCount = 1;
 
@@ -54,32 +57,6 @@ HObject FindRegion::findNext(HObject &Image)
 		Union1(SelectShapeRegion, &Region);
 		CountObj(Region, &Number);
 
-		//HTuple hv_area1, hv_row1, hv_column1, number;
-		//AreaCenter(SelectShapeRegion, &hv_area1, &hv_row1, &hv_column1);
-		//HTuple topRow = 479, topColumn = 639;
-		//for (HTuple i = 0;i < hv_area1.Length();i = i + 1)
-		//{
-
-		//	if (hv_row1[i].D() < topRow.D())
-		//	{
-		//		topRow = hv_row1[i];
-		//		topColumn = hv_column1[i];
-		//	}
-		//}
-		////SelectShape(Region, &Region, "area", "and", 9999, 9999);
-		//if (topRow.D() < 479)
-		//{
-		//	findRegion(Image, &Region, topRow, topColumn, 500);
-		//	HTuple A, R, C;
-		//	CountObj(Region, &Number);
-		//	AreaCenter(Region, &A, &R, &C);
-		//	if (A.D() < lastArea.D() * 0.4 || A.D() > lastArea.D() * 1.5)
-		//	{
-		//		SelectShape(Region, &Region, "area", "and", 9999, 9999);
-		//		Number = 0;
-		//	}
-		//}
-
 		if (!(Number == 0))
 		{
 			HTuple A, R, C;
@@ -129,7 +106,7 @@ HObject FindRegion::findNext(HObject &Image, cameraParam _cameraParam)
 	HTuple Number;
 	GenEmptyRegion(&EmptyRegion);
 
-	CToFCamera::Coord3D whereThisFunctionWillFind;
+	myCoor3D whereThisFunctionWillFind;
 	whereThisFunctionWillFind.x = lastABSWorldCoor.x + vx * (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 	whereThisFunctionWillFind.y = lastABSWorldCoor.y + vy * (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 	whereThisFunctionWillFind.z = lastABSWorldCoor.z + vz * (MAXFINDAGAINTIMES + 1 - findAgainTimes);
@@ -206,7 +183,7 @@ HObject FindRegion::findNext(HObject &Image, cameraParam _cameraParam)
 			AreaCenter(Result, &Area, &Row, &Column);
 			HalconCpp::Intensity(Result, Image, &Grayval, &Deviation);
 
-			CToFCamera::Coord3D curABSWorldCoor = CameraCoorToWorldCoor(_cameraParam, PixelCoorToCameraCoor(Row.D(), Column.D(), Grayval));
+			myCoor3D curABSWorldCoor = CameraCoorToWorldCoor(_cameraParam, PixelCoorToCameraCoor(Row.D(), Column.D(), Grayval));
 			vx = (curABSWorldCoor.x - lastABSWorldCoor.x) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 			vy = (curABSWorldCoor.y - lastABSWorldCoor.y) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 			vz = (curABSWorldCoor.z - lastABSWorldCoor.z) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
@@ -224,7 +201,7 @@ HObject FindRegion::findNext(HObject &Image, cameraParam _cameraParam)
 }
 
 
-int FindRegion::getOffset(CToFCamera::Coord3D pillarCoor, float offset[2])
+int FindRegion::getOffset(myCoor3D pillarCoor, float offset[2])
 {
 	static const int HEIGHTOFFSET = 300;
 	static const int HEIGHTFILTRE = 200;
@@ -250,7 +227,7 @@ int FindRegion::getOffset(CToFCamera::Coord3D pillarCoor, float offset[2])
 
 
 	//交点坐标
-	CToFCamera::Coord3D intersectionCoor;
+	myCoor3D intersectionCoor;
 	float ratioThree[3];
 	ratioThree[0] = (regionTrack[lastCoorIndex - 1].y - regionTrack[lastCoorIndex].y) /
 		(regionTrack[lastCoorIndex].y - (pillarCoor.y - HEIGHTOFFSET));
@@ -274,7 +251,7 @@ int FindRegion::getOffset(CToFCamera::Coord3D pillarCoor, float offset[2])
 	return 0;
 }
 
-void FindRegionList::PushRegionToFind(HTuple Row, HTuple Column, HTuple Area, HTuple Grayval)
+void FindRegionList::pushRegionToFind(HTuple Row, HTuple Column, HTuple Area, HTuple Grayval)
 {
 	FindRegion* tmp = new FindRegion(Row, Column, Area, Grayval);
 	findRegionList.push_back(tmp);
@@ -357,4 +334,36 @@ std::vector<HObject> FindRegionList::RegionsFound(HObject &Image)
 	//result.erase(it, result.end());
 	regionNum = result.size();
 	return result;
+}
+
+void FindRegionList::detectRegion(HObject& image)
+{
+	SetColor(hv_WindowHandle, "red");
+	HObject ho_ROI_0, ho_ImageReduced, ho_Region, ho_ConnectedRegions, ho_SelectedRegions, ho_RegionUnion;
+	GenEmptyRegion(&ho_RegionUnion);
+	HTuple regionNum, hv_Area, hv_Row, hv_Column, hv_Grayval;
+
+
+	GenRectangle1(&ho_ROI_0, 0, 0, 478.5, 637.5);
+	ReduceDomain(image, ho_ROI_0, &ho_ImageReduced);
+
+	Threshold(ho_ImageReduced, &ho_Region, DETECTMINLIMIT, DETECTMAXLIMIT);
+	Connection(ho_Region, &ho_ConnectedRegions);
+	SelectShape(ho_ConnectedRegions, &ho_SelectedRegions, "area", "and", 1000, 17177);
+	CountObj(ho_SelectedRegions, &regionNum);
+
+	for (HTuple i = 1; i < regionNum + 1; i = i + 1)
+	{
+		HTuple hv_Deviation;
+		AreaCenter(ho_SelectedRegions[i], &hv_Area, &hv_Row, &hv_Column);
+		HalconCpp::Intensity(ho_SelectedRegions[i], image, &hv_Grayval, &hv_Deviation);
+		if (hv_Grayval.D()>0 && hv_Grayval.D() < 65535)
+		{
+			Union2(ho_SelectedRegions[i], ho_RegionUnion, &ho_RegionUnion);
+			pushRegionToFind(hv_Row, hv_Column, hv_Area, hv_Grayval);
+		}
+
+		if (HDevWindowStack::IsOpen())
+			DispObj(ho_RegionUnion, HDevWindowStack::GetActive());
+	}
 }

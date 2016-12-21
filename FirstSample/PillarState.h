@@ -32,26 +32,25 @@ public:
 		pDepthData = depth;
 	}
 
-	CToFCamera::Coord3D PillarState::middleFilter(CToFCamera::Coord3D pillarCoor);
+	myCoor3D PillarState::middleFilter(myCoor3D pillarCoor);
 
-	CToFCamera::Coord3D getPillarCoor(const cameraParam myCamParam, const PillarIndex pillarToFind);
+	myCoor3D getPillarCoor(const cameraParam myCamParam, const PillarIndex pillarToFind);
 
 
 private:
-	const int pillarWorldCoor[7][3] =
+	const myCoor3D pillarWorldCoor[7] =
 	{
-		{ 7550, 4075, 1000 },
-		{ 3525, 7075, 500 },
-		{ 5525, 7075, 1000 },
-		{ 7525, 7075, 1500 },
-		{ 9525, 7075, 1000 },
-		{ 11525, 7075, 500 },
-		{ 7550, 10075, 1000 },
+		myCoor3D( 7550, 4075, 1000 ),
+		myCoor3D( 3525, 7075, 500 ),
+		myCoor3D( 5525, 7075, 1000 ),
+		myCoor3D( 7525, 7075, 1500 ),
+		myCoor3D( 9525, 7075, 1000 ),
+		myCoor3D( 11525, 7075, 500 ),
+		myCoor3D( 7550, 10075, 1000 ),
 	};
 
 	const void *pConfidenceData;
 	const void *pDepthData;
 	HObject depthImage;
-	CToFCamera::Coord3D calculatePillarCoor(const cameraParam& myCamParam, const PillarIndex pillarToFind);
 };
 

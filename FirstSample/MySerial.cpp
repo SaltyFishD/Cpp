@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 //c++±ê×¼¿â
 #include <iostream>
 #include <sstream>

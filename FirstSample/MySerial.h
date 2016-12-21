@@ -12,12 +12,14 @@ public:
 	
 	MySerial():hCom(INVALID_HANDLE_VALUE),listenThreadClose(false),listenThreadID()
 	{}
+
+	
 	~MySerial()
 	{
 		std::cout << "已调用析构函数" << std::endl;
-		CloseHandle(hCom);
-		listenThreadClose = true;
-		Sleep(10);
+		//CloseHandle(hCom);
+		//listenThreadClose = true;
+		//Sleep(10);
 	}
 
 	const int ESC = 27;

@@ -1,11 +1,13 @@
 #pragma once
 #include "HalconCpp.h"
 #include "HDevThread.h"
+#include "CoordinateConvert.h"
 #include <list>
 #include <vector>
 #include <fstream>
 #include <iomanip>
 #include <ConsumerImplHelper/ToFCamera.h>
+
 
 using namespace GenTLConsumerImplHelper;
 using namespace HalconCpp;
@@ -18,6 +20,6 @@ void colour(HObject ho_Image, HObject *ho_Image_colour, HTuple hv_colour);
 void disp_message(HTuple hv_WindowHandle, HTuple hv_String, HTuple hv_CoordSystem,
 	HTuple hv_Row, HTuple hv_Column, HTuple hv_Color, HTuple hv_Box);
 
-CToFCamera::Coord3D slideFilter(CToFCamera::Coord3D pillarCoor);
+myCoor3D slideFilter(myCoor3D pillarCoor);
 
-CToFCamera::Coord3D middleFilter(CToFCamera::Coord3D pillarCoor);
+myCoor3D middleFilter(myCoor3D pillarCoor);

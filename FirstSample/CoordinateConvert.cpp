@@ -1,9 +1,9 @@
+#include "stdafx.h"
 #include "CoordinateConvert.h"
-#define REDTEAM
 
 const double M_PI = 3.14159265358979323846;
 
-bool CameraCoorToPixelCoor(CToFCamera::Coord3D CameraCoor, float* Row, float* Column)
+bool CameraCoorToPixelCoor(myCoor3D CameraCoor, float* Row, float* Column)
 {
 	float thetaRow, thetaColumn;
 	thetaRow = atan(CameraCoor.y / CameraCoor.z) / M_PI * 180;
@@ -17,9 +17,9 @@ bool CameraCoorToPixelCoor(CToFCamera::Coord3D CameraCoor, float* Row, float* Co
 	return true;
 }
 
-CToFCamera::Coord3D WorldCoorToCameraCoor(cameraParam _cameraParam, CToFCamera::Coord3D WorldCoor)
+myCoor3D WorldCoorToCameraCoor(cameraParam _cameraParam, myCoor3D WorldCoor)
 {
-	CToFCamera::Coord3D relativeCoor, CameraCoor;
+	myCoor3D relativeCoor, CameraCoor;
 	if (!relativeCoor.IsValid())
 	{
 		CameraCoor.x = 0;
@@ -55,9 +55,9 @@ CToFCamera::Coord3D WorldCoorToCameraCoor(cameraParam _cameraParam, CToFCamera::
 	return CameraCoor;
 }
 
-CToFCamera::Coord3D CameraCoorToWorldCoor(cameraParam _cameraParam, CToFCamera::Coord3D CameraCoor)
+myCoor3D CameraCoorToWorldCoor(cameraParam _cameraParam, myCoor3D CameraCoor)
 {
-	CToFCamera::Coord3D relativeCoor, WorldCoor;
+	myCoor3D relativeCoor, WorldCoor;
 	if (!relativeCoor.IsValid())
 	{
 		WorldCoor.x = 0;
@@ -89,9 +89,9 @@ CToFCamera::Coord3D CameraCoorToWorldCoor(cameraParam _cameraParam, CToFCamera::
 	return WorldCoor;
 }
 
-CToFCamera::Coord3D PixelCoorToCameraCoor(float Row, float Column, float z)
+myCoor3D PixelCoorToCameraCoor(float Row, float Column, float z)
 {
-	CToFCamera::Coord3D CameraCoor;
+	myCoor3D CameraCoor;
 	float thetaRow, thetaColumn;
 	thetaRow = (Row - height / 2 + 3)*vFov / height;
 	thetaColumn = (Column - width / 2 + 14)*hFov / width;
