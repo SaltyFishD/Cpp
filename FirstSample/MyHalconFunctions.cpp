@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "MyHalconFunctions.h"
 
 //找某一点相关的颜色的region

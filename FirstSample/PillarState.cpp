@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include <cMath>
 #include "PillarState.h"
 

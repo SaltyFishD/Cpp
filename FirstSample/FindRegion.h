@@ -76,13 +76,20 @@ private:
 class FindRegionList
 {
 private:
-	//std::list<FindRegion*> findRegionList;
+	//设置检测区的宽度
+	const int DETECTMINLIMIT = 100;
+	const int DETECTMAXLIMIT = 3000;
 	size_t regionNum;
+
+	//将region加入查找队列
+	void pushRegionToFind(HTuple Row, HTuple Column, HTuple Area, HTuple Grayval);
 public:
 	FindRegionList() {};
-	void PushRegionToFind(HTuple Row, HTuple Column, HTuple Area, HTuple Grayval);
+
 	std::vector<HObject> RegionsFound(HObject &Image);
 	std::vector<FindRegion*> findRegionList;
-	//bool writePositionToFile(const std::string& fileName, MultiFrameListener& listener);
+	void detectRegion(HObject &Image);
+
 	~FindRegionList() {};
 };
+

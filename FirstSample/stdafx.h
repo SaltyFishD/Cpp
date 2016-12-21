@@ -15,18 +15,6 @@
 #   error Unsupported platform
 #endif
 
-//#include <ConsumerImplHelper/ToFCamera.h>
-//#include <iostream>
-//#include <iomanip>
-
-//#include <ctime>
-//#include <fstream>
-
-//#include "HalconCpp.h"
-//#include "HDevThread.h"
-//#include "halcon_functions.h"
-//#include "PillarState.h"
-//#include "FindRegion.h"
-//#include "MySerial.h"
-
+// ∫Í∂®“Â
+#define USESERIALPORT
 #define BLUETEAM

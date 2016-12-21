@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "HalconCpp.h"
 #include "HDevThread.h"
 #include "MyHalconFunctions.h"
@@ -16,9 +17,6 @@
 #  pragma message( "    /DELAYLOAD:\"" DLL_NAME("GenApi") "\"")
 #endif
 
-// 宏定义
-#define USESERIALPORT
-
 //命名空间
 using namespace HalconCpp;
 using namespace GenTLConsumerImplHelper;
@@ -32,8 +30,12 @@ const void *intensityData;
 const void *confidenceData;
 myCoor3D farPillarCoordinate;
 MySerial port;//串口类
-extern double Angle[3];//陀螺仪角度
 
+FindRegionList taskList; //飞盘追踪类
+PillarState myPillarState; //台柱识别类
+
+//外部变量
+extern double Angle[3];//陀螺仪角度
 
 double getFrameRate()
 {
@@ -170,8 +172,6 @@ int CameraAction::run()
     return EXIT_SUCCESS;
 }
 
-FindRegionList taskList;
-PillarState myPillarState;
 bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 {
 	bool hv_run;
@@ -202,6 +202,7 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 			const int width = (int)parts[0].width;
 			const int height = (int)parts[0].height;
 
+			//生成深度图像
 			depthData = parts[0].pData;
 			intensityData = parts[1].pData;
 			confidenceData = parts[2].pData;
@@ -219,6 +220,9 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 			GenImage1(&depthImage, "uint2", width, height, (Hlong)(depthImageByte));
 			//GenImage1(&depthImage, "uint2", width, height, (Hlong)(depthImageByte));
 			//GenImage1(&confidenceImage, "int2", width, height, (Hlong)(uint16_t *)(confidenceData));
+
+			//释放图片内存
+			delete[] depthImageByte;
 
 			if (HDevWindowStack::IsOpen())
 				DispObj(depthImage, HDevWindowStack::GetActive());
@@ -280,47 +284,21 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 			tmpParam.yaw = Angle[2] - 20;
 
 			myCoor3D pillarPixelCoor;
-			myCoor3D tmp;
+			myCoor3D pillarCamCoor;
 			//现在返回的是像素坐标
 			pillarPixelCoor = myPillarState.getPillarCoor(tmpParam, myPillarState.middlePillar);
-			tmp = *((myCoor3D*) depthData + (int)pillarPixelCoor.x * width + (int)pillarPixelCoor.y);
+			pillarCamCoor = *((myCoor3D*) depthData + (int)pillarPixelCoor.x * width + (int)pillarPixelCoor.y);
 			/********************************************************/
 
 			/***************************飞盘追踪*********************/
-			//SetColor(hv_WindowHandle, "red");
-			//HObject ho_ROI_0, ho_ImageReduced, ho_Region, ho_ConnectedRegions, ho_SelectedRegions, ho_RegionUnion;
-			//GenEmptyRegion(&ho_RegionUnion);
-			//vector<HObject> regionsFound;
-			//HTuple regionNum, hv_Area;
 
-			//
-			//GenRectangle1(&ho_ROI_0, 0, 0, 478.5, 637.5);
-			//ReduceDomain(depthImage, ho_ROI_0, &ho_ImageReduced);
+			//检测有无飞盘飞过检测区
+			taskList.detectRegion(depthImage);
 
-			//Threshold(ho_ImageReduced, &ho_Region, 100, 3000);
-			//Connection(ho_Region, &ho_ConnectedRegions);
-			//SelectShape(ho_ConnectedRegions, &ho_SelectedRegions, "area", "and", 1000, 17177);
-			//CountObj(ho_SelectedRegions, &regionNum);
+			vector<HObject> regionsFound;
 
-			//int num = regionNum.D();
-
-			//for (HTuple i = 1; i < regionNum + 1; i = i + 1)
-			//{
-			//	HTuple hv_Deviation;
-			//	AreaCenter(ho_SelectedRegions[i], &hv_Area, &hv_Row, &hv_Column);
-			//	HalconCpp::Intensity(ho_SelectedRegions[i], depthImage, &hv_Grayval,&hv_Deviation);
-			//	if (hv_Grayval.D()>0&& hv_Grayval.D() < 65535)
-			//	{
-			//		Union2(ho_SelectedRegions[i], ho_RegionUnion, &ho_RegionUnion);
-			//		taskList.PushRegionToFind(hv_Row, hv_Column, hv_Area, hv_Grayval);
-			//	}
-			//}
-
-			//if (HDevWindowStack::IsOpen())
-			//	DispObj(ho_RegionUnion, HDevWindowStack::GetActive());
-
-			////存储找到的region
-			//regionsFound = taskList.RegionsFound(depthImage);
+			//存储找到的region
+			regionsFound = taskList.RegionsFound(depthImage);
 			//if (regionsFound.size() > 0)
 			//{
 			//	for (size_t i = 0; i < regionsFound.size(); ++i)
@@ -374,7 +352,6 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 				HDevExpDefaultException.ToHTuple(&hv_Exception);
 			}
 
-			delete[] depthImageByte;
 		}
 		
 		datafile.close();
@@ -392,9 +369,6 @@ int main(int argc, char* argv[])
 	SetSystem("height", 512);
 
 	SetSystem("use_window_thread", "true");
-	// Local iconic variables
-	HObject  ho_Image, ho_GrayImage, ho_Region;
-
 
 	// Local control variables
 	SetWindowAttr("background_color", "black");
@@ -402,14 +376,14 @@ int main(int argc, char* argv[])
 	HDevWindowStack::Push(hv_WindowHandle);
 	SetPart(hv_WindowHandle, 0, 0, 480, 640);
     int exitCode = EXIT_SUCCESS;
+
+	ofstream datafile;
+	datafile.open("C:\\Users\\Administrator\\Desktop\\datafile.txt");
+	datafile.clear();
+	datafile.close();
     
     try
     {
-		ofstream datafile;
-		datafile.open("C:\\Users\\Administrator\\Desktop\\datafile.txt");
-		datafile.clear();
-		datafile.close();
-
         CToFCamera::InitProducer();
 
         CameraAction processing;
