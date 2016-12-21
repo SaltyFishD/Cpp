@@ -3,6 +3,7 @@
 #include "HalconCpp.h"
 #include "HDevThread.h"
 #include "CoordinateConvert.h"
+#include "stdafx.h"
 
 using namespace GenTLConsumerImplHelper;
 using namespace HalconCpp;
@@ -33,7 +34,11 @@ public:
 
 	friend bool operator == (FindRegion& lhs, FindRegion& rhs)
 	{
+#ifdef NEWMETHOD 
+		return (abs(lhs.lastABSWorldCoor.x - rhs.lastABSWorldCoor.x < 100) && abs(lhs.lastABSWorldCoor.y - rhs.lastABSWorldCoor.y < 100) && abs(lhs.lastABSWorldCoor.z - rhs.lastABSWorldCoor.z) < 100);
+#else
 		return (abs(lhs.lastRow.D() - rhs.lastRow.D() < 10) && abs(lhs.lastColumn.D() - rhs.lastColumn.D() < 10) && abs(lhs.lastGrayval.D() - rhs.lastGrayval.D()) < 100);
+#endif
 	}
 
 	void getSpeed(int speed[3])

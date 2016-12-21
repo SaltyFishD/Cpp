@@ -246,7 +246,7 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 			myCamParam.worldY = 1160;
 			myCamParam.worldZ = 520;
 			myCamParam.pitch = -Angle[1] + 3;
-			myCamParam.yaw = Angle[2] - 11;
+			myCamParam.yaw = Angle[2] - 16;
 
 			myCoor3D pillarPixelCoor;
 
@@ -254,42 +254,53 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 			pillarPixelCoor = myPillarState.getPillarCoor(myCamParam, myPillarState.nearPillar);
 			pillarCamCoor = *((myCoor3D*) depthData + (int)pillarPixelCoor.x * width + (int)pillarPixelCoor.y);
 			/***************************·ÉÅÌ×·×Ù*********************/
+			
+				//¼ì²âÓÐÎÞ·ÉÅÌ·É¹ý¼ì²âÇø
+				taskList.detectRegion(depthImage);
 
-			//¼ì²âÓÐÎÞ·ÉÅÌ·É¹ý¼ì²âÇø
-			taskList.detectRegion(depthImage);
-
-			vector<HObject> regionsFound;
-
-			//´æ´¢ÕÒµ½µÄregion
-			regionsFound = taskList.RegionsFound(depthImage);
-			if (regionsFound.size() > 0)
-			{
-				for (size_t i = 0; i < regionsFound.size(); ++i)
+				vector<HObject> regionsFound;
+try
+{
+				//´æ´¢ÕÒµ½µÄregion
+				regionsFound = taskList.RegionsFound(depthImage);
+				if (regionsFound.size() > 0)
 				{
-					HTuple hv_SaucerArea, hv_SaucerRow, hv_SaucerColumn;
-					if (HDevWindowStack::IsOpen())
-						DispObj(regionsFound[i], HDevWindowStack::GetActive());
-					AreaCenter(regionsFound[i], &hv_SaucerArea, &hv_SaucerRow, &hv_SaucerColumn);
 
-					myCoor3D *pSaucerCoorTwo[2];
-					pSaucerCoorTwo[0] = (myCoor3D*) depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() - 1;
-					pSaucerCoorTwo[1] = (myCoor3D*) depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() + 1;
-					myCoor3D* pSaucerCoordinate = new myCoor3D();
-					pSaucerCoordinate->x = (pSaucerCoorTwo[0]->x + pSaucerCoorTwo[1]->x) / 2;
-					pSaucerCoordinate->y = (pSaucerCoorTwo[0]->y + pSaucerCoorTwo[1]->y) / 2;
-					pSaucerCoordinate->z = (pSaucerCoorTwo[0]->z + pSaucerCoorTwo[1]->z) / 2;
-
-					if (pSaucerCoordinate->z > 2000)
+					for (size_t i = 0; i < regionsFound.size(); ++i)
 					{
-						//¼ÇÂ¼×ø±ê
-						taskList.findRegionList[i]->recordRegionTrack(*pSaucerCoordinate);
+						HTuple hv_SaucerArea, hv_SaucerRow, hv_SaucerColumn;
+						if (HDevWindowStack::IsOpen())
+							DispObj(regionsFound[i], HDevWindowStack::GetActive());
+						AreaCenter(regionsFound[i], &hv_SaucerArea, &hv_SaucerRow, &hv_SaucerColumn);
 
-						//datafile << "·ÉÅÌ±àºÅ: " << taskList.findRegionList[i]->saucerIndex << " X: " << setw(2) << pSaucerCoordinate->x << " Y: " << setw(2) << pSaucerCoordinate->y << " Z: " << pSaucerCoordinate->z << endl;
+						myCoor3D *pSaucerCoorTwo[2];
+						pSaucerCoorTwo[0] = (myCoor3D*)depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() - 1;
+						pSaucerCoorTwo[1] = (myCoor3D*)depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() + 1;
+						myCoor3D* pSaucerCoordinate = new myCoor3D();
+						pSaucerCoordinate->x = (pSaucerCoorTwo[0]->x + pSaucerCoorTwo[1]->x) / 2;
+						pSaucerCoordinate->y = (pSaucerCoorTwo[0]->y + pSaucerCoorTwo[1]->y) / 2;
+						pSaucerCoordinate->z = (pSaucerCoorTwo[0]->z + pSaucerCoorTwo[1]->z) / 2;
+					
+						if (pSaucerCoordinate->z > 2000)
+						{
+							//¼ÇÂ¼×ø±ê
+							taskList.findRegionList[i]->recordRegionTrack(*pSaucerCoordinate);
 
-						//datafile << "    " << "Öù×Ó×ø±ê" << farPillarCoordinate.x << "   " << farPillarCoordinate.y << "    " << farPillarCoordinate.z << endl;
+							//datafile << "·ÉÅÌ±àºÅ: " << taskList.findRegionList[i]->saucerIndex << " X: " << setw(2) << pSaucerCoordinate->x << " Y: " << setw(2) << pSaucerCoordinate->y << " Z: " << pSaucerCoordinate->z << endl;
+
+							//datafile << "    " << "Öù×Ó×ø±ê" << farPillarCoordinate.x << "   " << farPillarCoordinate.y << "    " << farPillarCoordinate.z << endl;
+						}
+
 					}
+
 				}
-			}
+}
+catch (...)
+{
+	cout << "Õâ´íÁË" << endl;
+	throw ERROR;
+}
+			
 			/*****************************************************************/
 
 			
@@ -322,6 +333,7 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 	}
 	catch (...)
 	{
+		cin.get();
 		return 0;
 	}
 }

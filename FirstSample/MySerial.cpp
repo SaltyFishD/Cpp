@@ -416,7 +416,8 @@ void MySerial::receive(const int data_len)
 				}
 			}
 		}
-		//memset(&receiveBuffer, 0, 100 * sizeof(unsigned char));
-		//memset(&receiveData, 0, 20 * sizeof(unsigned char));
+		memset(&receiveBuffer, 0, 100 * sizeof(unsigned char));
+		memset(&receiveData, 0, 20 * sizeof(unsigned char));
+		Sleep(10);
 	}
 }
