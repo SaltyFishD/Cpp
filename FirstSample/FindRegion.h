@@ -11,13 +11,14 @@ using namespace std;
 class FindRegion
 {
 public:
-	FindRegion(HTuple Row, HTuple Column, HTuple Area, HTuple Grayval) :
-		lastRow(Row), lastColumn(Column), lastArea(Area), lastGrayval(Grayval), saucerIndex(saucerCount)
+	FindRegion(HTuple Row, HTuple Column, HTuple Area, HTuple Grayval) 
+		:lastRow(Row), lastColumn(Column), lastArea(Area), lastGrayval(Grayval), saucerIndex(saucerCount)
 	{
 		saucerCount++;
 	}
 
-	FindRegion(HTuple Row, HTuple Column, HTuple Area, HTuple Grayval, cameraParam _cameraParam) :lastABSWorldCoor(CameraCoorToWorldCoor(_cameraParam, PixelCoorToCameraCoor(Row.D(), Column.D(), Grayval.D()))), lastArea(Area), saucerIndex(saucerCount)
+	FindRegion(HTuple Row, HTuple Column, HTuple Area, HTuple Grayval, cameraParam _cameraParam) 
+		:lastABSWorldCoor(CameraCoorToWorldCoor(_cameraParam, PixelCoorToCameraCoor(Row.D(), Column.D(), Grayval.D()))), lastArea(Area), saucerIndex(saucerCount)
 	{
 		saucerCount++;
 	}
