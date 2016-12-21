@@ -3,9 +3,11 @@
 #include "MyHalconFunctions.h"
 
 //外部变量
-extern myCoor3D farPillarCoordinate;
+extern myCoor3D pillarCamCoor;
 extern HTuple hv_WindowHandle;
+extern cameraParam myCamParam;
 
+//静态成员变量
 int FindRegion::saucerCount = 1;
 
 HObject FindRegion::findNext(HObject &Image)
@@ -257,6 +259,12 @@ void FindRegionList::pushRegionToFind(HTuple Row, HTuple Column, HTuple Area, HT
 	findRegionList.push_back(tmp);
 }
 
+void FindRegionList::pushRegionToFind(HTuple Row, HTuple Column, HTuple Area, HTuple Grayval, cameraParam mycamParam)
+{
+	FindRegion* tmp = new FindRegion(Row, Column, Area, Grayval, mycamParam);
+	findRegionList.push_back(tmp);
+}
+
 std::vector<HObject> FindRegionList::RegionsFound(HObject &Image)
 {
 	std::vector<HObject> result;
@@ -279,7 +287,13 @@ std::vector<HObject> FindRegionList::RegionsFound(HObject &Image)
 
 		//将返回的结果加入vector容器
 		if (i < findRegionList.size())
+		{
+#ifdef NEWMETHOD
+			tmpObj = findRegionList[i]->findNext(Image,myCamParam);
+#else
 			tmpObj = findRegionList[i]->findNext(Image);
+#endif
+		}
 
 		HTuple hv_Area, hv_Row, hv_Column;
 		AreaCenter(tmpObj, &hv_Area, &hv_Row, &hv_Column);
@@ -298,36 +312,28 @@ std::vector<HObject> FindRegionList::RegionsFound(HObject &Image)
 			}
 		}
 
-		try
+		if (findRegionList[i]->thisHasLost())
 		{
-			if (findRegionList[i]->thisHasLost())
-			{
-				int trackSuccess;
-				float offset[2];
+			int trackSuccess;
+			float offset[2];
 
-				trackSuccess = findRegionList[i]->getOffset(farPillarCoordinate, offset);
+			trackSuccess = findRegionList[i]->getOffset(pillarCamCoor, offset);
 
-				std::ofstream datafile;
-				datafile.open("C:\\Users\\Administrator\\Desktop\\datafile.txt", std::ios::app);
-				if (trackSuccess == 0)
-					datafile << "飞盘" << findRegionList[i]->saucerIndex << " x偏差: " << setw(2) << offset[0] << " z偏差: " << setw(2) << offset[1] << endl;
-				else if (trackSuccess == 1)
-					datafile << "飞盘" << findRegionList[i]->saucerIndex << "采集点太少或者是杂物" << endl;
-				else if (trackSuccess == 2)
-					datafile << "飞盘" << findRegionList[i]->saucerIndex << "过早跟丢" << endl;
-				datafile << "飞盘" << findRegionList[i]->saucerIndex << " 已丢失！" << std::endl << std::endl;
+			std::ofstream datafile;
+			datafile.open("C:\\Users\\Administrator\\Desktop\\datafile.txt", std::ios::app);
+			if (trackSuccess == 0)
+				datafile << "飞盘" << findRegionList[i]->saucerIndex << " x偏差: " << setw(2) << offset[0] << " z偏差: " << setw(2) << offset[1] << endl;
+			else if (trackSuccess == 1)
+				datafile << "飞盘" << findRegionList[i]->saucerIndex << "采集点太少或者是杂物" << endl;
+			else if (trackSuccess == 2)
+				datafile << "飞盘" << findRegionList[i]->saucerIndex << "过早跟丢" << endl;
+			datafile << "飞盘" << findRegionList[i]->saucerIndex << " 已丢失！" << std::endl << std::endl;
 
-				delete (findRegionList[i]);
-				findRegionList.erase(findRegionList.begin() + i);
+			delete (findRegionList[i]);
+			findRegionList.erase(findRegionList.begin() + i);
 
 
-				datafile.close();
-			}
-		}
-		catch (...)
-		{
-			std::cout << "delete error" << std::endl;
-			std::cin.get();
+			datafile.close();
 		}
 	}
 	//auto it = std::unique(result.begin(), result.end());
@@ -360,7 +366,11 @@ void FindRegionList::detectRegion(HObject& image)
 		if (hv_Grayval.D()>0 && hv_Grayval.D() < 65535)
 		{
 			Union2(ho_SelectedRegions[i], ho_RegionUnion, &ho_RegionUnion);
+#ifdef NEWMETHOD
+			pushRegionToFind(hv_Row, hv_Column, hv_Area, hv_Grayval, myCamParam);
+#else
 			pushRegionToFind(hv_Row, hv_Column, hv_Area, hv_Grayval);
+#endif
 		}
 
 		if (HDevWindowStack::IsOpen())

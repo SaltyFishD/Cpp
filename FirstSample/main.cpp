@@ -28,8 +28,9 @@ HObject depthImage, confidenceImage;
 const void *depthData;//深度图像数据
 const void *intensityData;
 const void *confidenceData;
-myCoor3D farPillarCoordinate;
+myCoor3D pillarCamCoor;
 MySerial port;//串口类
+cameraParam myCamParam;//摄像头状态参数;
 
 FindRegionList taskList; //飞盘追踪类
 PillarState myPillarState; //台柱识别类
@@ -181,9 +182,9 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 		ofstream datafile;
 		datafile.open("C:\\Users\\Administrator\\Desktop\\datafile.txt",ios::app);
 		/********************帧率显示**********************/
-		//double frameRate;
-		//frameRate = getFrameRate();
-		//cout << "frameRate:  " << setw(4) << frameRate << endl;
+		double frameRate;
+		frameRate = getFrameRate();
+		cout << "frameRate:  " << setw(4) << frameRate << endl;
 		/*************************************************/
 
 		if (grabResult.status == GrabResult::Timeout)
@@ -239,57 +240,19 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 			/********************************************************/
 
 			/*********************台柱识别***************************/
-			/*********************古代的方法*************************/
-			//{
-			//	{
-			//		SetColor(hv_WindowHandle, "green");
-			//		HObject ho_ROI_Rect, ho_PillarRoI, ho_Regions, ho_ConnectedRegions, ho_SelectedRegions;
-			//		GenRectangle1(&ho_ROI_Rect, 200, 0, 478.5, 638.5);
-			//		ReduceDomain(depthImage, ho_ROI_Rect, &ho_PillarRoI);
-			//		Threshold(ho_PillarRoI, &ho_Regions, 7200, 8400);
-			//		Connection(ho_Regions, &ho_ConnectedRegions);
-			//		SelectShapeStd(ho_ConnectedRegions, &ho_SelectedRegions, "max_area", 90);
-			//		//AreaCenter(ho_SelectedRegions, &hv_PillarArea, &hv_PillarRow, &hv_PillarColumn);
-
-			//		HTuple  hv_Value, hv_column;
-			//		RegionFeatures(ho_SelectedRegions, ((HTuple("row1").Append("column1")).Append("column2")),
-			//			&hv_Value);
-			//		int farPillarColumn = (hv_Value[1].D() + hv_Value[2].D()) / 2;
-			//		int farPillarRow = hv_Value[0].D() + 5;
-			//		if (HDevWindowStack::IsOpen())
-			//			DispObj(ho_SelectedRegions, HDevWindowStack::GetActive());
-			//		disp_message(hv_WindowHandle, "远", "window", farPillarRow, farPillarColumn - 15, "black", "true");
-
-
-			//		myCoor3D *pFarPillarCoordinate;
-			//		pFarPillarCoordinate = (myCoor3D*) depthData + farPillarRow * width + (int)farPillarColumn;
-			//		farPillarCoordinate = middleFilter(*pFarPillarCoordinate);
-			//		cout << farPillarCoordinate.y << endl;
-			//		
-			//	}
-			//}
-			//static bool first = true;
-			//if (first)
-			//{
-			//	datafile << "    " << "柱子坐标" << farPillarCoordinate.x << "   " << farPillarCoordinate.y << "    " << farPillarCoordinate.z << endl;
-			//	first = false;
-			//}
-			/***********************现代的方法****************************************/
 			myPillarState.updateCameraData(depthImage, depthData, confidenceData);
-			cameraParam tmpParam;
-			tmpParam.worldX = 5740;
-			tmpParam.worldY = 1160;
-			tmpParam.worldZ = 520;
-			tmpParam.pitch = -Angle[1] + 6;
-			tmpParam.yaw = Angle[2] - 20;
+
+			myCamParam.worldX = 5740;
+			myCamParam.worldY = 1160;
+			myCamParam.worldZ = 520;
+			myCamParam.pitch = -Angle[1] + 3;
+			myCamParam.yaw = Angle[2] - 11;
 
 			myCoor3D pillarPixelCoor;
-			myCoor3D pillarCamCoor;
-			//现在返回的是像素坐标
-			pillarPixelCoor = myPillarState.getPillarCoor(tmpParam, myPillarState.middlePillar);
-			pillarCamCoor = *((myCoor3D*) depthData + (int)pillarPixelCoor.x * width + (int)pillarPixelCoor.y);
-			/********************************************************/
 
+			//现在返回的是像素坐标
+			pillarPixelCoor = myPillarState.getPillarCoor(myCamParam, myPillarState.nearPillar);
+			pillarCamCoor = *((myCoor3D*) depthData + (int)pillarPixelCoor.x * width + (int)pillarPixelCoor.y);
 			/***************************飞盘追踪*********************/
 
 			//检测有无飞盘飞过检测区
@@ -299,34 +262,34 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 
 			//存储找到的region
 			regionsFound = taskList.RegionsFound(depthImage);
-			//if (regionsFound.size() > 0)
-			//{
-			//	for (size_t i = 0; i < regionsFound.size(); ++i)
-			//	{
-			//		HTuple hv_SaucerArea, hv_SaucerRow, hv_SaucerColumn;
-			//		if (HDevWindowStack::IsOpen())
-			//			DispObj(regionsFound[i], HDevWindowStack::GetActive());
-			//		AreaCenter(regionsFound[i], &hv_SaucerArea, &hv_SaucerRow, &hv_SaucerColumn);
+			if (regionsFound.size() > 0)
+			{
+				for (size_t i = 0; i < regionsFound.size(); ++i)
+				{
+					HTuple hv_SaucerArea, hv_SaucerRow, hv_SaucerColumn;
+					if (HDevWindowStack::IsOpen())
+						DispObj(regionsFound[i], HDevWindowStack::GetActive());
+					AreaCenter(regionsFound[i], &hv_SaucerArea, &hv_SaucerRow, &hv_SaucerColumn);
 
-			//		myCoor3D *pSaucerCoorTwo[2];
-			//		pSaucerCoorTwo[0] = (myCoor3D*) depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() - 1;
-			//		pSaucerCoorTwo[1] = (myCoor3D*) depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() + 1;
-			//		myCoor3D* pSaucerCoordinate = new myCoor3D();
-			//		pSaucerCoordinate->x = (pSaucerCoorTwo[0]->x + pSaucerCoorTwo[1]->x) / 2;
-			//		pSaucerCoordinate->y = (pSaucerCoorTwo[0]->y + pSaucerCoorTwo[1]->y) / 2;
-			//		pSaucerCoordinate->z = (pSaucerCoorTwo[0]->z + pSaucerCoorTwo[1]->z) / 2;
+					myCoor3D *pSaucerCoorTwo[2];
+					pSaucerCoorTwo[0] = (myCoor3D*) depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() - 1;
+					pSaucerCoorTwo[1] = (myCoor3D*) depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() + 1;
+					myCoor3D* pSaucerCoordinate = new myCoor3D();
+					pSaucerCoordinate->x = (pSaucerCoorTwo[0]->x + pSaucerCoorTwo[1]->x) / 2;
+					pSaucerCoordinate->y = (pSaucerCoorTwo[0]->y + pSaucerCoorTwo[1]->y) / 2;
+					pSaucerCoordinate->z = (pSaucerCoorTwo[0]->z + pSaucerCoorTwo[1]->z) / 2;
 
-			//		if (pSaucerCoordinate->z > 2000)
-			//		{
-			//			//记录坐标
-			//			taskList.findRegionList[i]->recordRegionTrack(*pSaucerCoordinate);
+					if (pSaucerCoordinate->z > 2000)
+					{
+						//记录坐标
+						taskList.findRegionList[i]->recordRegionTrack(*pSaucerCoordinate);
 
-			//			datafile << "飞盘编号: " << taskList.findRegionList[i]->saucerIndex << " X: " << setw(2) << pSaucerCoordinate->x << " Y: " << setw(2) << pSaucerCoordinate->y << " Z: " << pSaucerCoordinate->z << endl;
+						//datafile << "飞盘编号: " << taskList.findRegionList[i]->saucerIndex << " X: " << setw(2) << pSaucerCoordinate->x << " Y: " << setw(2) << pSaucerCoordinate->y << " Z: " << pSaucerCoordinate->z << endl;
 
-			//			datafile << "    " << "柱子坐标" << farPillarCoordinate.x << "   " << farPillarCoordinate.y << "    " << farPillarCoordinate.z << endl;
-			//		}
-			//	}
-			//}
+						//datafile << "    " << "柱子坐标" << farPillarCoordinate.x << "   " << farPillarCoordinate.y << "    " << farPillarCoordinate.z << endl;
+					}
+				}
+			}
 			/*****************************************************************/
 
 			
