@@ -1,11 +1,11 @@
 #include "stdafx.h"
 #include "MyHalconFunctions.h"
 
+
 //找某一点相关的颜色的region
 void findRegion(HObject ho_GrayImage, HObject *ho_Region, HTuple hv_x, HTuple hv_y,
 	HTuple hv_threashold)
 {
-
 	// Local iconic variables
 	HObject  ho_EmptyRegion, ho_point, ho_Regions;
 	HObject  ho_ConnectedRegions, ho_ObjectSelected, ho_ifEmpty;
@@ -14,16 +14,19 @@ void findRegion(HObject ho_GrayImage, HObject *ho_Region, HTuple hv_x, HTuple hv
 	HTuple  hv_Grayval, hv_FloorX, hv_FloorY, hv_Number;
 	HTuple  hv_Index;
 
-	//
 	GenEmptyRegion(&ho_EmptyRegion);
-	//
+
+	if (hv_x.D() < 1 && hv_y.D() < 1)
+	{
+		*ho_Region = ho_EmptyRegion;
+		return ;
+	}
 	GetGrayval(ho_GrayImage, hv_x, hv_y, &hv_Grayval);
-	//
-	//
+
 	TupleFloor(hv_x, &hv_FloorX);
 	TupleFloor(hv_y, &hv_FloorY);
 	GenRegionPoints(&ho_point, hv_FloorX, hv_FloorY);
-	//
+
 	Threshold(ho_GrayImage, &ho_Regions, hv_Grayval - hv_threashold, hv_Grayval + hv_threashold);
 	Connection(ho_Regions, &ho_ConnectedRegions);
 	CountObj(ho_ConnectedRegions, &hv_Number);

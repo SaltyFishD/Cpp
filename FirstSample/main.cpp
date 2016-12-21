@@ -246,50 +246,61 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 			myCamParam.worldY = 1160;
 			myCamParam.worldZ = 520;
 			myCamParam.pitch = -Angle[1] + 3;
-			myCamParam.yaw = Angle[2] - 11;
+			myCamParam.yaw = Angle[2] - 19;
 
 			myCoor3D pillarPixelCoor;
 
 			//现在返回的是像素坐标
-			pillarPixelCoor = myPillarState.getPillarCoor(myCamParam, myPillarState.nearPillar);
-			pillarCamCoor = *((myCoor3D*) depthData + (int)pillarPixelCoor.x * width + (int)pillarPixelCoor.y);
+			pillarPixelCoor = myPillarState.getPillarCoor(myCamParam, myPillarState.middlePillar);
+			//pillarCamCoor = *((myCoor3D*) depthData + (int)pillarPixelCoor.x * width + (int)pillarPixelCoor.y);
 			/***************************飞盘追踪*********************/
+			
+				//检测有无飞盘飞过检测区
+				taskList.detectRegion(depthImage);
 
-			//检测有无飞盘飞过检测区
-			taskList.detectRegion(depthImage);
-
-			vector<HObject> regionsFound;
-
-			//存储找到的region
-			regionsFound = taskList.RegionsFound(depthImage);
-			if (regionsFound.size() > 0)
-			{
-				for (size_t i = 0; i < regionsFound.size(); ++i)
+				vector<HObject> regionsFound;
+try
+{
+				//存储找到的region
+				regionsFound = taskList.RegionsFound(depthImage);
+				if (regionsFound.size() > 0)
 				{
-					HTuple hv_SaucerArea, hv_SaucerRow, hv_SaucerColumn;
-					if (HDevWindowStack::IsOpen())
-						DispObj(regionsFound[i], HDevWindowStack::GetActive());
-					AreaCenter(regionsFound[i], &hv_SaucerArea, &hv_SaucerRow, &hv_SaucerColumn);
 
-					myCoor3D *pSaucerCoorTwo[2];
-					pSaucerCoorTwo[0] = (myCoor3D*) depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() - 1;
-					pSaucerCoorTwo[1] = (myCoor3D*) depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() + 1;
-					myCoor3D* pSaucerCoordinate = new myCoor3D();
-					pSaucerCoordinate->x = (pSaucerCoorTwo[0]->x + pSaucerCoorTwo[1]->x) / 2;
-					pSaucerCoordinate->y = (pSaucerCoorTwo[0]->y + pSaucerCoorTwo[1]->y) / 2;
-					pSaucerCoordinate->z = (pSaucerCoorTwo[0]->z + pSaucerCoorTwo[1]->z) / 2;
-
-					if (pSaucerCoordinate->z > 2000)
+					for (size_t i = 0; i < regionsFound.size(); ++i)
 					{
-						//记录坐标
-						taskList.findRegionList[i]->recordRegionTrack(*pSaucerCoordinate);
+						HTuple hv_SaucerArea, hv_SaucerRow, hv_SaucerColumn;
+						if (HDevWindowStack::IsOpen())
+							DispObj(regionsFound[i], HDevWindowStack::GetActive());
+						AreaCenter(regionsFound[i], &hv_SaucerArea, &hv_SaucerRow, &hv_SaucerColumn);
 
-						//datafile << "飞盘编号: " << taskList.findRegionList[i]->saucerIndex << " X: " << setw(2) << pSaucerCoordinate->x << " Y: " << setw(2) << pSaucerCoordinate->y << " Z: " << pSaucerCoordinate->z << endl;
+						myCoor3D *pSaucerCoorTwo[2];
+						pSaucerCoorTwo[0] = (myCoor3D*)depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() - 1;
+						pSaucerCoorTwo[1] = (myCoor3D*)depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() + 1;
+						myCoor3D* pSaucerCoordinate = new myCoor3D();
+						pSaucerCoordinate->x = (pSaucerCoorTwo[0]->x + pSaucerCoorTwo[1]->x) / 2;
+						pSaucerCoordinate->y = (pSaucerCoorTwo[0]->y + pSaucerCoorTwo[1]->y) / 2;
+						pSaucerCoordinate->z = (pSaucerCoorTwo[0]->z + pSaucerCoorTwo[1]->z) / 2;
+					
+						if (pSaucerCoordinate->z > 2000)
+						{
+							//记录坐标
+							taskList.findRegionList[i]->recordRegionTrack(*pSaucerCoordinate);
 
-						//datafile << "    " << "柱子坐标" << farPillarCoordinate.x << "   " << farPillarCoordinate.y << "    " << farPillarCoordinate.z << endl;
+							//datafile << "飞盘编号: " << taskList.findRegionList[i]->saucerIndex << " X: " << setw(2) << pSaucerCoordinate->x << " Y: " << setw(2) << pSaucerCoordinate->y << " Z: " << pSaucerCoordinate->z << endl;
+
+							//datafile << "    " << "柱子坐标" << farPillarCoordinate.x << "   " << farPillarCoordinate.y << "    " << farPillarCoordinate.z << endl;
+						}
+
 					}
+
 				}
-			}
+}
+catch (...)
+{
+	cout << "这错了" << endl;
+	throw ERROR;
+}
+			
 			/*****************************************************************/
 
 			
@@ -322,6 +333,7 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 	}
 	catch (...)
 	{
+		cin.get();
 		return 0;
 	}
 }

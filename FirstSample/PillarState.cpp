@@ -130,12 +130,11 @@ myCoor3D PillarState::getPillarCoor(const cameraParam myCamParam, const PillarIn
 				DispObj(plRegion, HDevWindowStack::GetActive());
 		/*****************************************************************/
 		HTuple  hv_Value;
-		RegionFeatures(ho_SelectedRegions, ((HTuple("row1").Append("column1")).Append("column2")),
+		RegionFeatures(plRegion, ((HTuple("row1").Append("column1")).Append("column2")),
 			&hv_Value);
 		
 		int pillarPixelColumn = (hv_Value[1].D() + hv_Value[2].D()) / 2;
 		int PillarPixelRow = hv_Value[0].D() + 5;
-
 		disp_message(hv_WindowHandle, "̨", "window", PillarPixelRow - 15, pillarPixelColumn, "black", "true");
 
 		myCoor3D pillarCoor;
