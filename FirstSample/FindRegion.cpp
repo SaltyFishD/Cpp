@@ -112,8 +112,10 @@ HObject FindRegion::findNext(HObject &Image, cameraParam _cameraParam)
 	whereThisFunctionWillFind.x = lastABSWorldCoor.x + vx * (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 	whereThisFunctionWillFind.y = lastABSWorldCoor.y + vy * (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 	whereThisFunctionWillFind.z = lastABSWorldCoor.z + vz * (MAXFINDAGAINTIMES + 1 - findAgainTimes);
+	myCoor3D cameraCoor;
+	cameraCoor = WorldCoorToCameraCoor(_cameraParam, whereThisFunctionWillFind);
 	float Row, Column;
-	if (!CameraCoorToPixelCoor(WorldCoorToCameraCoor(_cameraParam, whereThisFunctionWillFind), &Row, &Column))
+	if (!CameraCoorToPixelCoor(cameraCoor, &Row, &Column))
 	{	//移动太多移出屏幕了
 		--findAgainTimes;
 		return EmptyRegion;
@@ -128,29 +130,29 @@ HObject FindRegion::findNext(HObject &Image, cameraParam _cameraParam)
 	if (findTimesCount)
 	{
 		if (Row > 32755 || Row < -32755 || Column > 32748 || Column < -32748 ||
-			whereThisFunctionWillFind.z < 1000)
+			cameraCoor.z < 1000)
 		{
 			hasLost = true;
 			return EmptyRegion;
 			//飞出屏幕外，干掉这个类
 		}
 
-		GenRectangle2(&Rectangle, Row, Column, 0, 190000.0 / whereThisFunctionWillFind.z, 120000.0 / whereThisFunctionWillFind.z);
+		GenRectangle2(&Rectangle, Row, Column, 0, 190000.0 / cameraCoor.z, 120000.0 / cameraCoor.z);
 		if (lastArea.D() < 350)
 			GenRectangle2(&Rectangle, Row, Column, 0, 330 / 9, 330 / 11);
 		if (lastArea.D() < 50)
 			GenRectangle2(&Rectangle, Row, Column, 0, 240 / 9, 240 / 13);
 		ReduceDomain(Image, Rectangle, &ImageReduced);
-		if (whereThisFunctionWillFind.z - threahold > 65535 || whereThisFunctionWillFind.z + threahold < 0)
+		if (cameraCoor.z - threahold > 65535 || cameraCoor.z + threahold < 0)
 		{
 			hasLost = true;
 			return EmptyRegion;
 			//飞出屏幕外，干掉这个类
 		}
 
-		Threshold(ImageReduced, &Region, whereThisFunctionWillFind.z - threahold, whereThisFunctionWillFind.z + threahold);
+		Threshold(ImageReduced, &Region, cameraCoor.z - threahold, cameraCoor.z + threahold);
 		Connection(Region, &BackgroundRegions);
-		SelectShape(BackgroundRegions, &SelectShapeRegion, "area", "and", 233.180000 / (whereThisFunctionWillFind.z / 1000 * (whereThisFunctionWillFind.z / 1000)), 15177.840000 / (whereThisFunctionWillFind.z / 1000 * (whereThisFunctionWillFind.z / 1000)));
+		SelectShape(BackgroundRegions, &SelectShapeRegion, "area", "and", 233.180000 / (cameraCoor.z / 1000 * (cameraCoor.z / 1000)), 15177.840000 / (cameraCoor.z / 1000 * (cameraCoor.z / 1000)));
 		//SelectShape(SelectShapeRegion, &SelectShapeRegion, "row", "and", 0, 450);
 		SelectShape(BackgroundRegions, &SelectShapeRegion, "row", "and", Row - 20, Row + 20);
 
