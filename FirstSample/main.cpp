@@ -255,51 +255,44 @@ bool CameraAction::onImageGrabbed( GrabResult grabResult, BufferParts parts )
 			//pillarCamCoor = *((myCoor3D*) depthData + (int)pillarPixelCoor.x * width + (int)pillarPixelCoor.y);
 			/***************************飞盘追踪*********************/
 			
-				//检测有无飞盘飞过检测区
-				taskList.detectRegion(depthImage);
+			//检测有无飞盘飞过检测区
+			taskList.detectRegion(depthImage);
 
-				vector<HObject> regionsFound;
-try
-{
-				//存储找到的region
-				regionsFound = taskList.RegionsFound(depthImage);
-				if (regionsFound.size() > 0)
+			vector<HObject> regionsFound;
+
+			//存储找到的region
+			regionsFound = taskList.RegionsFound(depthImage);
+			if (regionsFound.size() > 0)
+			{
+
+				for (size_t i = 0; i < regionsFound.size(); ++i)
 				{
+					HTuple hv_SaucerArea, hv_SaucerRow, hv_SaucerColumn;
+					if (HDevWindowStack::IsOpen())
+						DispObj(regionsFound[i], HDevWindowStack::GetActive());
+					AreaCenter(regionsFound[i], &hv_SaucerArea, &hv_SaucerRow, &hv_SaucerColumn);
 
-					for (size_t i = 0; i < regionsFound.size(); ++i)
-					{
-						HTuple hv_SaucerArea, hv_SaucerRow, hv_SaucerColumn;
-						if (HDevWindowStack::IsOpen())
-							DispObj(regionsFound[i], HDevWindowStack::GetActive());
-						AreaCenter(regionsFound[i], &hv_SaucerArea, &hv_SaucerRow, &hv_SaucerColumn);
-
-						myCoor3D *pSaucerCoorTwo[2];
-						pSaucerCoorTwo[0] = (myCoor3D*)depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() - 1;
-						pSaucerCoorTwo[1] = (myCoor3D*)depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() + 1;
-						myCoor3D* pSaucerCoordinate = new myCoor3D();
-						pSaucerCoordinate->x = (pSaucerCoorTwo[0]->x + pSaucerCoorTwo[1]->x) / 2;
-						pSaucerCoordinate->y = (pSaucerCoorTwo[0]->y + pSaucerCoorTwo[1]->y) / 2;
-						pSaucerCoordinate->z = (pSaucerCoorTwo[0]->z + pSaucerCoorTwo[1]->z) / 2;
+					myCoor3D *pSaucerCoorTwo[2];
+					pSaucerCoorTwo[0] = (myCoor3D*)depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() - 1;
+					pSaucerCoorTwo[1] = (myCoor3D*)depthData + (int)hv_SaucerRow.D() * width + (int)hv_SaucerColumn.D() + 1;
+					myCoor3D* pSaucerCoordinate = new myCoor3D();
+					pSaucerCoordinate->x = (pSaucerCoorTwo[0]->x + pSaucerCoorTwo[1]->x) / 2;
+					pSaucerCoordinate->y = (pSaucerCoorTwo[0]->y + pSaucerCoorTwo[1]->y) / 2;
+					pSaucerCoordinate->z = (pSaucerCoorTwo[0]->z + pSaucerCoorTwo[1]->z) / 2;
 					
-						if (pSaucerCoordinate->z > 2000)
-						{
-							//记录坐标
-							taskList.findRegionList[i]->recordRegionTrack(*pSaucerCoordinate);
+					if (pSaucerCoordinate->z > 2000)
+					{
+						//记录坐标
+						taskList.findRegionList[i]->recordRegionTrack(*pSaucerCoordinate);
 
-							//datafile << "飞盘编号: " << taskList.findRegionList[i]->saucerIndex << " X: " << setw(2) << pSaucerCoordinate->x << " Y: " << setw(2) << pSaucerCoordinate->y << " Z: " << pSaucerCoordinate->z << endl;
+						//datafile << "飞盘编号: " << taskList.findRegionList[i]->saucerIndex << " X: " << setw(2) << pSaucerCoordinate->x << " Y: " << setw(2) << pSaucerCoordinate->y << " Z: " << pSaucerCoordinate->z << endl;
 
-							//datafile << "    " << "柱子坐标" << farPillarCoordinate.x << "   " << farPillarCoordinate.y << "    " << farPillarCoordinate.z << endl;
-						}
-
+						//datafile << "    " << "柱子坐标" << farPillarCoordinate.x << "   " << farPillarCoordinate.y << "    " << farPillarCoordinate.z << endl;
 					}
 
 				}
-}
-catch (...)
-{
-	cout << "这错了" << endl;
-	throw ERROR;
-}
+
+			}
 			
 			/*****************************************************************/
 

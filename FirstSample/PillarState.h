@@ -6,7 +6,6 @@
 #include "HDevThread.h"
 #include "CoordinateConvert.h"
 
-#define REDTEAM
 using namespace GenTLConsumerImplHelper;
 using namespace HalconCpp;
 using namespace std;
