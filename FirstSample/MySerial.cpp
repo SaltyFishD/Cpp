@@ -16,22 +16,25 @@
 
 using namespace std;
 /*陀螺仪角度*/
-double Angle[3] = {0, 0, 0};
+double Angle[3] = { 0, 0, 0 };
+float receiveX = 0;
+float receiveY = 0;
+float receiveAngle = 0;
 /*************************************************
 * 函数名称 ：                         open_file
 * 函数功能 ：                         打开指定的串口并初始化
 * 形参 ：							  file_name     串口号
-									  input_buffer  接收缓冲区  默认1024
-									  ouput_buffer  发送缓冲区  默认1024
-									  baud			波特率		默认115200
-									  byte_size		字节长		默认8
-									  parity		检验位		默认无
-									  stopbits		停止位		默认1
+input_buffer  接收缓冲区  默认1024
+ouput_buffer  发送缓冲区  默认1024
+baud			波特率		默认115200
+byte_size		字节长		默认8
+parity		检验位		默认无
+stopbits		停止位		默认1
 * 返回值 ：                           0             成功
-									  -1            失败
+-1            失败
 ****************************************************/
 int MySerial::open_file(LPCWSTR file_name, int input_buffer, int ouput_buffer, int baud,
-	int byte_size, int parity, int stopbits) 
+	int byte_size, int parity, int stopbits)
 {
 	hCom = CreateFile(file_name, GENERIC_READ | GENERIC_WRITE,  //允许读写
 		0,          //此项必须为0
@@ -56,15 +59,15 @@ int MySerial::open_file(LPCWSTR file_name, int input_buffer, int ouput_buffer, i
 /*************************************************
 * 函数名称 ：                         open
 * 函数功能 ：                         打开指定的串口
-* 形参 ：							  com_num       串口编号   
-									  input_buffer  接收缓冲区   默认1024
-									  ouput_buffer  发送缓冲区	 默认1024
-									  baud          波特率		 默认115200
-									  byte_size     字节长		 默认8
-									  parity        检验位		 默认无
-									  stopbits      停止位		 默认1
+* 形参 ：							  com_num       串口编号
+input_buffer  接收缓冲区   默认1024
+ouput_buffer  发送缓冲区	 默认1024
+baud          波特率		 默认115200
+byte_size     字节长		 默认8
+parity        检验位		 默认无
+stopbits      停止位		 默认1
 * 返回值 ：							  0				成功
-									  -1            失败
+-1            失败
 ****************************************************/
 int MySerial::open(int com_num, int input_buffer, int ouput_buffer, int baud,
 	int byte_size, int parity, int stopbits)
@@ -96,14 +99,14 @@ int MySerial::open(int com_num, int input_buffer, int ouput_buffer, int baud,
 * 函数名称 ：						auto_open
 * 函数功能 ：						自动搜索串口打开
 * 形参 ：							input_buffer  接收缓冲区	默认1024
-									ouput_buffer  发送缓冲区	默认1024
-									baud          波特率		默认115200
-									byte_size     字节长		默认8
-									parity        检验位		默认无
-									stopbits      停止位		默认1
+ouput_buffer  发送缓冲区	默认1024
+baud          波特率		默认115200
+byte_size     字节长		默认8
+parity        检验位		默认无
+stopbits      停止位		默认1
 * 返回值 ：							0			  成功
-									-1			 
-* 注意项 ：                         串口号不能大于等于10   
+-1
+* 注意项 ：                         串口号不能大于等于10
 ****************************************************/
 int MySerial::auto_open(int input_buffer, int ouput_buffer, int baud,
 	int byte_size, int parity, int stopbits)
@@ -122,20 +125,20 @@ int MySerial::auto_open(int input_buffer, int ouput_buffer, int baud,
 	dw_long = sizeof(port_name);
 	dw_sizeof_port_name = sizeof(sz_port_name);
 	bool success_or_not = 0;
-	
+
 	long ret0 = RegOpenKeyEx(HKEY_LOCAL_MACHINE,  //打开主键名称 
 		data_Set,       //打开的子键
 		0,           //保留值  必须为0
 		KEY_READ,               // 访问权限
 		&hKey);                 //返回的串口句柄
-	//打开一个制定的注册表键 成功返回ERROR_SUCCESS
+								//打开一个制定的注册表键 成功返回ERROR_SUCCESS
 	if (ret0 == ERROR_SUCCESS)   //调用成功
 	{
 		while (status == ERROR_SUCCESS)
 		{
 			status = RegEnumValue(hKey, dw_index++, port_name, &dw_long,
 				NULL, &type, sz_port_name, &dw_sizeof_port_name); //读取键值
-			if (status == ERROR_SUCCESS )
+			if (status == ERROR_SUCCESS)
 			{
 				//open(LPCTSTR(&sz_port_name));
 				int rec = open_file(LPCTSTR(sz_port_name), input_buffer, ouput_buffer, baud, byte_size, parity, stopbits);
@@ -157,19 +160,19 @@ int MySerial::auto_open(int input_buffer, int ouput_buffer, int baud,
 		}
 		RegCloseKey(hKey);
 	}
-	if(success_or_not == 0)
+	if (success_or_not == 0)
 	{
 		std::cout << "串口未打开！ QAQ" << std::endl
-				  << "ESC键退出" << std::endl;
-		while(1)
-		{ 
+			<< "ESC键退出" << std::endl;
+		while (1)
+		{
 			int key = _getche();
 
 			if (key == ESC)
-			{ 
+			{
 				this->~MySerial();
 				std::exit(0);
-			}			
+			}
 			///*if (key == SPACE)
 			//{
 			//	std::cout << "串口未打开" << std::endl;
@@ -183,16 +186,16 @@ int MySerial::auto_open(int input_buffer, int ouput_buffer, int baud,
 * 函数名称 ：							init
 * 函数功能 ：							设置串口参数
 * 形参 ：								input_buffer  接收缓冲区	默认1024
-										ouput_buffer  发送缓冲区	默认1024
-										baud          波特率		默认115200
-										byte_size     字节长		默认8
-										parity        检验位		默认无
-										stopbits      停止位		默认1
+ouput_buffer  发送缓冲区	默认1024
+baud          波特率		默认115200
+byte_size     字节长		默认8
+parity        检验位		默认无
+stopbits      停止位		默认1
 * 返回值 ：								0             成功
-										-1		      失败
+-1		      失败
 ****************************************************/
-int MySerial::init(int input_buffer, int ouput_buffer, int baud , 
-	int byte_size ,int parity , int stopbits ) const
+int MySerial::init(int input_buffer, int ouput_buffer, int baud,
+	int byte_size, int parity, int stopbits) const
 {
 	//输入缓冲区和输出缓冲区
 	SetupComm(hCom, input_buffer, ouput_buffer);
@@ -238,7 +241,7 @@ int MySerial::init(int input_buffer, int ouput_buffer, int baud ,
 		std::cout << "字节数参数错误" << std::endl;
 		return -1;
 	}
-	
+
 	switch (parity)
 	{
 	case 0:
@@ -284,11 +287,11 @@ int MySerial::init(int input_buffer, int ouput_buffer, int baud ,
 * 函数名称 ：							send
 * 函数功能 ：							发送数据
 * 形参 ：								senf_buf   发送数据
-										data_len   数据长度
+data_len   数据长度
 * 返回值 ：								0          成功
-										-1		   失败
+-1		   失败
 ****************************************************/
-int MySerial::send(unsigned char *send_buf,unsigned long data_len) const
+int MySerial::send(unsigned char *send_buf, unsigned long data_len) const
 {
 	DWORD errorFlags;
 	COMSTAT comStat;
@@ -297,7 +300,7 @@ int MySerial::send(unsigned char *send_buf,unsigned long data_len) const
 	memset(&wOverlapped, 0, sizeof(OVERLAPPED));
 	wOverlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	ClearCommError(&wOverlapped, &errorFlags, &comStat);
-	
+
 	WriteFile(hCom, send_buf, data_len, &numOfBytesWritten, &wOverlapped);
 
 	if (WaitForSingleObject(wOverlapped.hEvent, 20) == WAIT_OBJECT_0)  //等待的对象变为已通知状态
@@ -315,7 +318,7 @@ int MySerial::send(unsigned char *send_buf,unsigned long data_len) const
 
 void MySerial::openListenThread()
 {
-	thread listenThread(&MySerial::receive,this,33);
+	thread listenThread(&MySerial::receive, this, 33);
 	listenThreadID = listenThread.get_id();
 	listenThread.detach();
 }
@@ -323,16 +326,16 @@ void MySerial::openListenThread()
 * 函数名称 ：							receive
 * 函数功能 ：							接收数据
 * 形参 ：								rcv_buf	   接收数据缓存区
-										data_len   接收数据长度
+data_len   接收数据长度
 * 返回值 ：								0		   成功
-										-1		   失败
+-1		   失败
 ****************************************************/
 void MySerial::receive(const int data_len)
 {
-	unsigned char receiveBuffer[33] = { 0 };
+	unsigned char receiveBuffer[12] = { 0 };
 	unsigned char receiveData[20] = { 0 };
-	  //输入缓冲区
-     //接收到的正确数据
+	//输入缓冲区
+	//接收到的正确数据
 	DWORD commEvtMask = 0;
 	OVERLAPPED rOverlapped;
 	DWORD error;
@@ -345,7 +348,7 @@ void MySerial::receive(const int data_len)
 	{
 		ResetEvent(rOverlapped.hEvent);
 		DWORD rec = WaitCommEvent(hCom, &commEvtMask, &rOverlapped);
-		if (!rec)
+		if (rec)
 		{
 			continue;
 		}
@@ -365,9 +368,9 @@ void MySerial::receive(const int data_len)
 
 		int receiveFlag = 0;
 		int j = 0;
-		for (int i = 0; i != 100; ++i)
+		for (int i = 0; i != 12; ++i)
 		{
-			if (receiveBuffer[i] == 0xFF && receiveBuffer[i+1] == 0xDD)
+			if (receiveBuffer[i] == 0xFF && receiveBuffer[i + 1] == 0xDD)
 				receiveFlag = 1;
 			if (receiveFlag == 1)
 			{
@@ -395,29 +398,60 @@ void MySerial::receive(const int data_len)
 		}
 		PurgeComm(hCom, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
 
-		int i = 0;
-		for (; i < 33; i++)
+		//int i = 0;
+		//for (; i < 33; i++)
+		//{
+		//	//真是让人头大
+		//	if (receiveBuffer[i] == 0x55 && receiveBuffer[i + 1] == 0x53/* && i + 11 < 34*/)
+		//	{
+		//		unsigned char mpu6050Data[11];
+		//		double T;
+		//		for (int j = 0; j < 11; j++)
+		//		{
+		//			mpu6050Data[j] = receiveBuffer[i++];
+		//		}
+		//		if (mpu6050Data[1] == 0x53)
+		//		{
+		//			Angle[0] = (short(mpu6050Data[3] << 8 | mpu6050Data[2])) / 32768.0 * 180;
+		//			Angle[1] = (short(mpu6050Data[5] << 8 | mpu6050Data[4])) / 32768.0 * 180;
+		//			Angle[2] = (short(mpu6050Data[7] << 8 | mpu6050Data[6])) / 32768.0 * 180;
+		//			T = (short(mpu6050Data[9] << 8 | mpu6050Data[8])) / 340.0 + 36.25;
+		//		}
+		//	}
+		//}
+
+		for (int i = 0; i < 12; i++)
 		{
-			//真是让人头大
-			if (receiveBuffer[i] == 0x55 && receiveBuffer[i + 1] == 0x53/* && i + 11 < 34*/)
+			if (receiveBuffer[i] == 0xB6 && receiveBuffer[i + 1] == 0xAB && receiveBuffer[i + 10] == 0xBE && receiveBuffer[i + 11] == 0xA9)
 			{
-				unsigned char mpu6050Data[11];
-				double T;
-				for (int j = 0; j < 11; j++)
+				unsigned char receData[12];
+				for (int j = 0; j < 12; j++)
 				{
-					mpu6050Data[j] = receiveBuffer[i++];
+					receData[j] = receiveBuffer[i++];
 				}
-				if (mpu6050Data[1] == 0x53)
+				//校验
+				if (receData[8] == ((receData[2] * 256 + receData[3] + receData[4] * 256 + receData[5] + receData[6] * 256 + receData[7] - 50000) & 0xff))
 				{
-					Angle[0] = (short(mpu6050Data[3] << 8 | mpu6050Data[2])) / 32768.0 * 180;
-					Angle[1] = (short(mpu6050Data[5] << 8 | mpu6050Data[4])) / 32768.0 * 180;
-					Angle[2] = (short(mpu6050Data[7] << 8 | mpu6050Data[6])) / 32768.0 * 180;
-					T = (short(mpu6050Data[9] << 8 | mpu6050Data[8])) / 340.0 + 36.25;
+					receiveX = receData[2] * 256 + receData[3] - 20000;
+					receiveY = receData[4] * 256 + receData[5] - 20000;
+					receiveAngle = (receData[6] * 256 + receData[7] - 10000) / 100.0;
+					//unsigned char tmp = ((receData[2] * 256 + receData[3] + receData[4] * 256 + receData[5] + receData[6] * 256 + receData[7] - 50000) & 0xff);
+					//if (tmp != receData[8])
+					//{
+					//	receiveX = 0;
+					//	receiveY = 0;
+					//	receiveAngle = 0;
+					//}
 				}
 			}
 		}
-		memset(&receiveBuffer, 0, 100 * sizeof(unsigned char));
+
+		memset(&receiveBuffer, 0, 12 * sizeof(unsigned char));
 		memset(&receiveData, 0, 20 * sizeof(unsigned char));
+
+		//cout << Angle[0] << "    " << Angle[1] << "    " << Angle[2] << endl;
+		cout << receiveX << "    " << receiveY << "    " << receiveAngle << endl;
+
 		Sleep(10);
 	}
 }
