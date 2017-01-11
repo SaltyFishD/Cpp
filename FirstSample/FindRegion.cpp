@@ -189,7 +189,7 @@ HObject FindRegion::findNext(HObject &Image, cameraParam _cameraParam)
 				AreaCenter(Result, &Area, &Row, &Column);
 				HalconCpp::Intensity(Result, Image, &Grayval, &Deviation);
 
-				myCoor3D curABSWorldCoor = CameraCoorToWorldCoor(_cameraParam, PixelCoorToCameraCoor(Row.D(), Column.D(), Grayval));
+				myCoor3D curABSWorldCoor = CameraCoorToWorldCoor(_cameraParam, PixelCoorToCameraCoor(Row.D(), Column.D(), Grayval.D()));
 				vx = 0.3 * vx + 0.7 * (curABSWorldCoor.x - lastABSWorldCoor.x) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 				vy = 0.3 * vy + 0.7 * (curABSWorldCoor.y - lastABSWorldCoor.y) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 				vz = 0.3 * vz + 0.7 * (curABSWorldCoor.z - lastABSWorldCoor.z) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
