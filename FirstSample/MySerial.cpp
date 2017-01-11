@@ -1,4 +1,3 @@
-#include "stdafx.h"
 
 //c++标准库
 #include <iostream>
@@ -20,6 +19,7 @@ double Angle[3] = { 0, 0, 0 };
 float receiveX = 0;
 float receiveY = 0;
 float receiveAngle = 0;
+int receiveTimesCount = 0;
 /*************************************************
 * 函数名称 ：                         open_file
 * 函数功能 ：                         打开指定的串口并初始化
@@ -315,10 +315,10 @@ int MySerial::send(unsigned char *send_buf, unsigned long data_len) const
 * 形参 ：								无
 * 返回值 ：							    无
 ****************************************************/
-
+#define BUFFERSIZE 30
 void MySerial::openListenThread()
 {
-	thread listenThread(&MySerial::receive, this, 33);
+	thread listenThread(&MySerial::receive, this, BUFFERSIZE);
 	listenThreadID = listenThread.get_id();
 	listenThread.detach();
 }
@@ -330,9 +330,10 @@ data_len   接收数据长度
 * 返回值 ：								0		   成功
 -1		   失败
 ****************************************************/
+
 void MySerial::receive(const int data_len)
 {
-	unsigned char receiveBuffer[12] = { 0 };
+	unsigned char receiveBuffer[BUFFERSIZE] = { 0 };
 	unsigned char receiveData[20] = { 0 };
 	//输入缓冲区
 	//接收到的正确数据
@@ -348,7 +349,7 @@ void MySerial::receive(const int data_len)
 	{
 		ResetEvent(rOverlapped.hEvent);
 		DWORD rec = WaitCommEvent(hCom, &commEvtMask, &rOverlapped);
-		if (rec)
+		if (!rec)
 		{
 			continue;
 		}
@@ -366,68 +367,46 @@ void MySerial::receive(const int data_len)
 
 		ReadFile(hCom, receiveBuffer, comStat.cbInQue, &numOfBytesRead, &rOverlapped);
 
-		int receiveFlag = 0;
-		int j = 0;
-		for (int i = 0; i != 12; ++i)
-		{
-			if (receiveBuffer[i] == 0xFF && receiveBuffer[i + 1] == 0xDD)
-				receiveFlag = 1;
-			if (receiveFlag == 1)
-			{
-				receiveData[j] = receiveBuffer[i];
-				if (j == data_len + 2)
-				{
-					unsigned char checkNum = 0;
-					for (int k = 0; k < data_len + 2; ++k)
-					{
-						checkNum += receiveData[k];
-					}
-					if (checkNum == receiveData[j])
-					{
-						receiveFlag = 2;
-						break;
-					}
-					else
-					{
-						receiveFlag = 0;
-						break;
-					}
-				}
-				j++;
-			}
-		}
-		PurgeComm(hCom, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
-
-		//int i = 0;
-		//for (; i < 33; i++)
+		//int receiveFlag = 0;
+		//int j = 0;
+		//for (int i = 0; i != 12; ++i)
 		//{
-		//	//真是让人头大
-		//	if (receiveBuffer[i] == 0x55 && receiveBuffer[i + 1] == 0x53/* && i + 11 < 34*/)
+		//	if (receiveBuffer[i] == 0xFF && receiveBuffer[i+1] == 0xDD)
+		//		receiveFlag = 1;
+		//	if (receiveFlag == 1)
 		//	{
-		//		unsigned char mpu6050Data[11];
-		//		double T;
-		//		for (int j = 0; j < 11; j++)
+		//		receiveData[j] = receiveBuffer[i];
+		//		if (j == data_len + 2)
 		//		{
-		//			mpu6050Data[j] = receiveBuffer[i++];
+		//			unsigned char checkNum = 0;
+		//			for (int k = 0; k < data_len + 2; ++k)
+		//			{
+		//				checkNum += receiveData[k];
+		//			}
+		//			if (checkNum == receiveData[j])
+		//			{
+		//				receiveFlag = 2;
+		//				break;
+		//			}
+		//			else
+		//			{
+		//				receiveFlag = 0;
+		//				break;
+		//			}
 		//		}
-		//		if (mpu6050Data[1] == 0x53)
-		//		{
-		//			Angle[0] = (short(mpu6050Data[3] << 8 | mpu6050Data[2])) / 32768.0 * 180;
-		//			Angle[1] = (short(mpu6050Data[5] << 8 | mpu6050Data[4])) / 32768.0 * 180;
-		//			Angle[2] = (short(mpu6050Data[7] << 8 | mpu6050Data[6])) / 32768.0 * 180;
-		//			T = (short(mpu6050Data[9] << 8 | mpu6050Data[8])) / 340.0 + 36.25;
-		//		}
+		//		j++;
 		//	}
 		//}
+		PurgeComm(hCom, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
 
-		for (int i = 0; i < 12; i++)
+		for (int i = 0; i < BUFFERSIZE; i++)
 		{
-			if (receiveBuffer[i] == 0xB6 && receiveBuffer[i + 1] == 0xAB && receiveBuffer[i + 10] == 0xBE && receiveBuffer[i + 11] == 0xA9)
+			if (receiveBuffer[i] == 0xB6 && receiveBuffer[i + 1] == 0xAB && receiveBuffer[(i + 10) % BUFFERSIZE] == 0xBE && receiveBuffer[(i + 11) % BUFFERSIZE] == 0xA9)
 			{
 				unsigned char receData[12];
 				for (int j = 0; j < 12; j++)
 				{
-					receData[j] = receiveBuffer[i++];
+					receData[j] = receiveBuffer[(i++) % BUFFERSIZE];
 				}
 				//校验
 				if (receData[8] == ((receData[2] * 256 + receData[3] + receData[4] * 256 + receData[5] + receData[6] * 256 + receData[7] - 50000) & 0xff))
@@ -442,7 +421,10 @@ void MySerial::receive(const int data_len)
 					//	receiveY = 0;
 					//	receiveAngle = 0;
 					//}
+					//std::cout << ++receiveTimesCount << std::endl;
+					cout << receiveX << "    " << receiveY << "    " << receiveAngle << endl;
 				}
+				break;
 			}
 		}
 
@@ -450,8 +432,8 @@ void MySerial::receive(const int data_len)
 		memset(&receiveData, 0, 20 * sizeof(unsigned char));
 
 		//cout << Angle[0] << "    " << Angle[1] << "    " << Angle[2] << endl;
-		cout << receiveX << "    " << receiveY << "    " << receiveAngle << endl;
 
-		Sleep(10);
+
+		Sleep(1);
 	}
 }
