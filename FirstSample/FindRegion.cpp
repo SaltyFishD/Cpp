@@ -156,7 +156,7 @@ HObject FindRegion::findNext(HObject &Image, cameraParam _cameraParam)
 			Connection(Region, &BackgroundRegions);
 			SelectShape(BackgroundRegions, &SelectShapeRegion, "area", "and", 233.180000 / (cameraCoor.z / 1000 * (cameraCoor.z / 1000)), 15177.840000 / (cameraCoor.z / 1000 * (cameraCoor.z / 1000)));
 			//SelectShape(SelectShapeRegion, &SelectShapeRegion, "row", "and", 0, 450);
-			SelectShape(BackgroundRegions, &SelectShapeRegion, "row", "and", Row - 20, Row + 20);
+			SelectShape(SelectShapeRegion, &SelectShapeRegion, "row", "and", Row - 20, Row + 20);
 
 
 			Union1(SelectShapeRegion, &Region);
@@ -190,9 +190,9 @@ HObject FindRegion::findNext(HObject &Image, cameraParam _cameraParam)
 				HalconCpp::Intensity(Result, Image, &Grayval, &Deviation);
 
 				myCoor3D curABSWorldCoor = CameraCoorToWorldCoor(_cameraParam, PixelCoorToCameraCoor(Row.D(), Column.D(), Grayval));
-				vx = (curABSWorldCoor.x - lastABSWorldCoor.x) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
-				vy = (curABSWorldCoor.y - lastABSWorldCoor.y) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
-				vz = (curABSWorldCoor.z - lastABSWorldCoor.z) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
+				vx = 0.3 * vx + 0.7 * (curABSWorldCoor.x - lastABSWorldCoor.x) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
+				vy = 0.3 * vy + 0.7 * (curABSWorldCoor.y - lastABSWorldCoor.y) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
+				vz = 0.3 * vz + 0.7 * (curABSWorldCoor.z - lastABSWorldCoor.z) / (MAXFINDAGAINTIMES + 1 - findAgainTimes);
 				lastArea = Area * 0.65 + lastArea * lastABSWorldCoor.z * lastABSWorldCoor.z / curABSWorldCoor.z / curABSWorldCoor.z * 0.35;
 
 				lastABSWorldCoor = curABSWorldCoor;
