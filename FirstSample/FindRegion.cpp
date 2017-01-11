@@ -169,7 +169,7 @@ HObject FindRegion::findNext(HObject &Image, cameraParam _cameraParam)
 				AreaCenter(Region, &A, &R, &C);
 				findRegion(Image, &Region, R, C, 1500);
 				AreaCenter(Region, &A, &R, &C);
-				if (A.D() < lastArea.D() * 0.4 || A.D() > lastArea.D() * 1.6)
+				if (A.D() < lastArea.D() * 0.3 || A.D() > lastArea.D() * 1.6)
 				{
 					Number = 0;
 				}
