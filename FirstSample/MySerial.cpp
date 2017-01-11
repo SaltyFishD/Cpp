@@ -1,4 +1,4 @@
-
+#include "stdafx.h"
 //c++标准库
 #include <iostream>
 #include <sstream>
@@ -15,11 +15,9 @@
 
 using namespace std;
 /*陀螺仪角度*/
-double Angle[3] = { 0, 0, 0 };
 float receiveX = 0;
 float receiveY = 0;
 float receiveAngle = 0;
-int receiveTimesCount = 0;
 /*************************************************
 * 函数名称 ：                         open_file
 * 函数功能 ：                         打开指定的串口并初始化
@@ -414,15 +412,6 @@ void MySerial::receive(const int data_len)
 					receiveX = receData[2] * 256 + receData[3] - 20000;
 					receiveY = receData[4] * 256 + receData[5] - 20000;
 					receiveAngle = (receData[6] * 256 + receData[7] - 10000) / 100.0;
-					//unsigned char tmp = ((receData[2] * 256 + receData[3] + receData[4] * 256 + receData[5] + receData[6] * 256 + receData[7] - 50000) & 0xff);
-					//if (tmp != receData[8])
-					//{
-					//	receiveX = 0;
-					//	receiveY = 0;
-					//	receiveAngle = 0;
-					//}
-					//std::cout << ++receiveTimesCount << std::endl;
-					cout << receiveX << "    " << receiveY << "    " << receiveAngle << endl;
 				}
 				break;
 			}
@@ -430,9 +419,6 @@ void MySerial::receive(const int data_len)
 
 		memset(&receiveBuffer, 0, 12 * sizeof(unsigned char));
 		memset(&receiveData, 0, 20 * sizeof(unsigned char));
-
-		//cout << Angle[0] << "    " << Angle[1] << "    " << Angle[2] << endl;
-
 
 		Sleep(1);
 	}
